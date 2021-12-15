@@ -35,9 +35,7 @@ export class NavOpts {
   }
 
   get path() {
-    return (this._path ??= this.pathString
-      .replace(/(^\/|\/$)/g, "")
-      .split("/"));
+    return (this._path ??= this.pathString.split("/").filter(Boolean));
   }
 
   get pathString() {

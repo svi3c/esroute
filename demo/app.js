@@ -2,7 +2,7 @@ import { Router } from "/dist/router.js";
 
 const router = new Router(
   {
-    "": () => load("routes/root.html"),
+    ".": () => load("routes/root.html"),
     foo: () => load("routes/foo.html"),
     bar: () => load("routes/bar.html"),
     x: {
