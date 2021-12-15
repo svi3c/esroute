@@ -58,11 +58,11 @@ export class Router<T> {
   }
 
   private _linkClickListener = (e: MouseEvent) => {
-    if (
-      e.target instanceof HTMLAnchorElement &&
-      e.target.origin === this._window.origin
-    ) {
-      this.go(e.target.pathname, { replace: "replace" in e.target.dataset });
+    const target = isAnchorElement(e.target)
+      ? e.target
+      : e.composedPath?.().find(isAnchorElement);
+    if (target && target.origin === this._window.origin) {
+      this.go(target.pathname, { replace: "replace" in target.dataset });
       e.preventDefault();
     }
   };
@@ -100,3 +100,7 @@ export class Router<T> {
     return this._resolver.resolve(this.routes, opts, this._notFound);
   }
 }
+
+const isAnchorElement = (
+  target: EventTarget | null
+): target is HTMLAnchorElement => target instanceof HTMLAnchorElement;
