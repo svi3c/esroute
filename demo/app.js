@@ -2,10 +2,14 @@ import { Router } from "/dist/router.js";
 
 const router = new Router(
   {
-    ".": () => load("routes/root.html"),
+    "/": (x) => {
+      console.log(x);
+      return load("routes/root.html");
+    },
     foo: () => load("routes/foo.html"),
     bar: () => load("routes/bar.html"),
     x: {
+      "/": {},
       "*": ({ params: [param] }) => {
         console.log(param);
         return load("routes/foo.html");

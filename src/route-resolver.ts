@@ -13,7 +13,7 @@ export type Guard = (route: NavOpts) => GuardResult | Promise<GuardResult>;
 
 export type RouteSpec<T> =
   | {
-      [K in string]: K extends "."
+      [K in string]: K extends "/"
         ? Resolve<T>
         : K extends "?"
         ? Guard
@@ -56,7 +56,7 @@ export class RouteResolver {
     const route = await this._traverseRoutes(routes, opts);
     return (
       route &&
-      (typeof route === "function" ? route : (route["."] as Resolve<T>) ?? null)
+      (typeof route === "function" ? route : (route["/"] as Resolve<T>) ?? null)
     );
   }
 

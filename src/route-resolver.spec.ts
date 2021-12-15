@@ -17,11 +17,11 @@ describe("Resolver", () => {
     expect(opts).toBe(navOpts);
   });
 
-  it("should resolve a route with resolve fn on '.'", async () => {
+  it("should resolve a route with resolve fn on '/'", async () => {
     const navOpts = new NavOpts("/foo/bar");
 
     const { value, opts } = await resolver.resolve(
-      { foo: { bar: { ".": () => ({ foo: "bar" }) } } },
+      { foo: { bar: { "/": () => ({ foo: "bar" }) } } },
       navOpts,
       null
     );
