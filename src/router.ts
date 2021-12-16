@@ -3,30 +3,36 @@ import { Resolve, Resolved, RouteResolver, RouteSpec } from "./route-resolver";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 
+export interface RouterConf<T> {
+  /**
+   * A fallback resolve funuction to use, if a route could not be found.
+   * By default it redirects to the root path '/'.
+   */
+  notFound?: Resolve<T>;
+  /**
+   * Whether the click handler for anchor elements shall not be installed.
+   * This might make sense, if you want to take more control over how anchor
+   * clicks are handled.
+   * By default we check whether the anchor element's origin property is equal
+   * to the window.location.origin property. If so, the router will take over
+   * navigation and event.preventDefault() is called.
+   */
+  noClick?: boolean;
+}
+
 export class Router<T> {
   resolution!: Promise<Resolved<T>>;
   private _resolved?: Resolved<T>;
-  private _window: Window;
   private _notFound: Resolve<T>;
   private _resolver = new RouteResolver();
   private _listeners = new Set<OnResolveListener<T>>();
 
   constructor(
     private routes: RouteSpec<T> = {},
-    {
-      window: win = window,
-      notFound = ({ go }) => go("/"),
-      resolver = new RouteResolver(),
-    }: {
-      notFound?: Resolve<T>;
-      window?: Window;
-      resolver?: RouteResolver;
-    } = {}
+    { notFound = ({ go }) => go([]), noClick = false }: RouterConf<T> = {}
   ) {
-    this._window = win;
     this._notFound = notFound;
-    this._resolver = resolver;
-    this._initListeners();
+    this._initListeners(noClick);
   }
 
   go(opts: NavOpts): Promise<void>;
@@ -47,28 +53,28 @@ export class Router<T> {
   }
 
   dispose() {
-    this._window.removeEventListener("popstate", this._popStateListener);
-    this._window.document.removeEventListener("click", this._linkClickListener);
+    window.removeEventListener("popstate", this._popStateListener);
+    document.removeEventListener("click", this._linkClickListener);
   }
 
-  private _initListeners() {
-    this._window.addEventListener("popstate", this._popStateListener);
-    this._window.document.addEventListener("click", this._linkClickListener);
-    this._popStateListener({ state: this._window.history.state });
+  private _initListeners(noClick: boolean) {
+    window.addEventListener("popstate", this._popStateListener);
+    if (!noClick) document.addEventListener("click", this._linkClickListener);
+    this._popStateListener({ state: history.state });
   }
 
   private _linkClickListener = (e: MouseEvent) => {
     const target = isAnchorElement(e.target)
       ? e.target
       : e.composedPath?.().find(isAnchorElement);
-    if (target && target.origin === this._window.origin) {
+    if (target && target.origin === location.origin) {
       this.go(target.pathname, { replace: "replace" in target.dataset });
       e.preventDefault();
     }
   };
 
   private _popStateListener = async ({ state }: { state: any }) => {
-    const { pathname, search } = this._window.location;
+    const { pathname, search } = window.location;
     const initialOpts = new NavOpts(`${pathname}${search}`, { state: state });
     const { opts } = await this._applyResolution(this._resolve(initialOpts));
 
@@ -91,7 +97,7 @@ export class Router<T> {
   }
 
   private _updateState({ state, replace, href }: NavOpts) {
-    const history = this._window.history;
+    const history = window.history;
     const updateState = history[replace ? "replaceState" : "pushState"];
     updateState.call(history, state, "", href);
   }

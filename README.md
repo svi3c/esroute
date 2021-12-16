@@ -86,3 +86,58 @@ const router = new Router({
   login: () => renderLogin(),
 });
 ```
+
+## Configuration
+
+The `Router` constructor takes two arguments: A `RouteSpec` and a `RouterConf` object.
+
+### The `RouteSpec`
+
+`RouteSpec` is a recursive type:
+
+```ts
+type RouteSpec<T> =
+  | {
+      [K in string]: K extends "/"
+        ? Resolve<T>
+        : K extends "?"
+        ? Guard
+        : RouteSpec<T>;
+    }
+  | Resolve<T>;
+```
+
+Example:
+
+```ts
+{
+  "/": resolveIndex,
+  "?": ({ go }) => isLoggedIn || go(["login"]),
+  x: resolveX,
+  nested: {
+    "/": resolveNestedIndex,
+    y: resolveY,
+    level2: {
+      z: resolveZ,
+      "?": ({ go }) => isAdmin || go([]),
+    },
+  },
+}
+```
+
+### The `RouterConf`
+
+`RouterConf` provides some router specific configuration:
+
+```ts
+interface RouterConf<T> {
+  notFound?: Resolve<T>;
+  noClick?: boolean;
+}
+```
+
+`RouterConf.notFound` can be used to provide a custom handler
+when a route cannot be resolved. By default the resolution is
+redirected to the `/` route.
+
+`RouterConf.noClick` can be used to disable the default click behavior for anchor elements.

@@ -19,7 +19,7 @@ const router = new Router(
   {
     notFound: ({ href, go }) => {
       console.warn("Route not found", href);
-      return go("/");
+      return go([]);
     },
   }
 );
