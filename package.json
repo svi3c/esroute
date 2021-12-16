@@ -1,7 +1,7 @@
 {
   "name": "esroute",
   "version": "0.0.2",
-  "description": "",
+  "description": "A small efficient framework-agnostic client-side routing library, written in TypeScript.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -13,7 +13,8 @@
     "route",
     "routing"
   ],
-  "author": "",
+  "repository": "github:svi3c/esroute",
+  "author": "Sven Rogge <sreglitzki@gmail.com>",
   "license": "ISC",
   "devDependencies": {
     "@swc/cli": "^0.1.51",
