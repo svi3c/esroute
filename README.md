@@ -141,3 +141,24 @@ when a route cannot be resolved. By default the resolution is
 redirected to the `/` route.
 
 `RouterConf.noClick` can be used to disable the default click behavior for anchor elements.
+
+## API
+
+### `Router.onResolve((res: Resolved<T>) => void): () => void`
+
+A router instance holds a callback registry.
+
+Your callback will be called initially with the currently resolved route and then every time a new route is resolved, but not yet placed on the history stack.
+
+`onResolve()` returns a function that you can call to unsubscribe the passed-in callback again.
+
+`Resolved<T>` looks like this:
+
+```ts
+interface Resolved<T> {
+  value: T;
+  opts: NavOpts;
+}
+```
+
+So when the route is resolved, not only get passed the resolved value (for example a template or a DOM element), but also the `NavOpts` instance to gain access to path variables, search params or the state.
