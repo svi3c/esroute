@@ -121,6 +121,9 @@ Example:
       z: resolveZ,
       "?": ({ go }) => isAdmin || go([]),
     },
+    "*": {
+      "foo": ({ params: [myParam] }) => resolveFoo(myParam),
+    }
   },
 }
 ```
