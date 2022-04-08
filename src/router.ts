@@ -1,5 +1,6 @@
 import { NavMeta, NavOpts, PathOrHref } from "./nav-opts";
-import { Resolve, Resolved, RouteResolver, RouteSpec } from "./route-resolver";
+import { Resolved, RouteResolver } from "./route-resolver";
+import { compileRoutes, Resolve, RouteSpec } from "./route-spec";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 
@@ -31,6 +32,7 @@ export class Router<T> {
     private routes: RouteSpec<T> = {},
     { notFound = ({ go }) => go([]), noClick = false }: RouterConf<T> = {}
   ) {
+    compileRoutes(routes);
     this._notFound = notFound;
     this._initListeners(noClick);
   }
