@@ -67,7 +67,7 @@ const router = new Router<string>({
 
 ### 🏎 Fast startup and runtime
 
-esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance is not processed and is very concise.
+esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance has only minimal processing to provide more configuration comfort.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
 
@@ -125,6 +125,7 @@ Example:
       "foo": ({ params: [myParam] }) => resolveFoo(myParam),
     }
   },
+  "/nested/deep-url/*/test":  ({ params: [myParam] }) => resolveFoo(myParam),
 }
 ```
 

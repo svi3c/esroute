@@ -1,25 +1,10 @@
 import { NavOpts } from "./nav-opts";
+import { Guard, Resolve, RouteSpec } from "./route-spec";
 
 export interface Resolved<T> {
   value: T;
   opts: NavOpts;
 }
-export type Resolve<T> = (
-  navOpts: NavOpts
-) => T | NavOpts | Promise<T | NavOpts>;
-
-export type GuardResult = void | false | NavOpts;
-export type Guard = (route: NavOpts) => GuardResult | Promise<GuardResult>;
-
-export type RouteSpec<T> =
-  | {
-      [K in string]: K extends "/"
-        ? Resolve<T>
-        : K extends "?"
-        ? Guard
-        : RouteSpec<T>;
-    }
-  | Resolve<T>;
 
 export class RouteResolver {
   constructor(private maxRedirects = 10) {}
