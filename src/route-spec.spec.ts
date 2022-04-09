@@ -9,9 +9,7 @@ describe("compileRoutes()", () => {
       "/foo": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       "/": resolve,
       foo: resolve,
     });
@@ -22,9 +20,7 @@ describe("compileRoutes()", () => {
       "/foo/bar": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         bar: resolve,
       },
@@ -36,9 +32,7 @@ describe("compileRoutes()", () => {
       "///foo//bar//": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         bar: resolve,
       },
@@ -54,9 +48,7 @@ describe("compileRoutes()", () => {
       },
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         "/": resolve,
         bar: {
@@ -78,6 +70,7 @@ describe("compileRoutes()", () => {
 
     const start = Date.now();
     compileRoutes(routes);
+
     expect(Date.now() - start).toBeLessThan(100);
   });
 });

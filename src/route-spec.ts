@@ -17,8 +17,8 @@ export type RouteSpec<T> =
     }
   | Resolve<T>;
 
-export const compileRoutes = (spec: RouteSpec<any>): void => {
-  if (typeof spec !== "object") return;
+export const compileRoutes = <T>(spec: RouteSpec<T>): RouteSpec<T> => {
+  if (typeof spec !== "object") return spec;
   const toSplit: string[] = [];
   for (const key in spec) {
     if (key.length === 1 || key.indexOf("/") < 0) compileRoutes(spec[key]);
@@ -43,4 +43,5 @@ export const compileRoutes = (spec: RouteSpec<any>): void => {
     compileRoutes(sub[last]);
     delete spec[key];
   }
+  return spec;
 };

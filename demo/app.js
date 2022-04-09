@@ -1,4 +1,4 @@
-import { Router } from "/dist/router.js";
+import { compileRoutes, Router } from "/dist/index.js";
 
 const router = new Router(
   {
@@ -15,10 +15,12 @@ const router = new Router(
         return load("routes/foo.html");
       },
     },
-    "/x/y/*/*": ({ params: [param1, param2] }) => {
-      console.log({ param1, param2 });
-      return load("routes/foo.html");
-    },
+    ...compileRoutes({
+      "/x/y/*/*": ({ params: [param1, param2] }) => {
+        console.log({ param1, param2 });
+        return load("routes/foo.html");
+      },
+    }),
   },
   {
     notFound: ({ href, go }) => {

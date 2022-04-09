@@ -67,7 +67,7 @@ const router = new Router<string>({
 
 ### 🏎 Fast startup and runtime
 
-esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance has only minimal processing to provide more configuration comfort.
+esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance by default is not compiled, to ensure maximum performance.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
 
@@ -124,8 +124,34 @@ Example:
     "*": {
       "foo": ({ params: [myParam] }) => resolveFoo(myParam),
     }
+  }
+}
+```
+
+For convenience, there is a `compileRoutes()` function that you can use to write
+routes in a maybe more concise way. Of course this precompilation has a bit of cost. So if you have a lot of routes, you might consider using the already optimized format above.
+
+```ts
+compileRoutes({
+  "/users/*": {
+    "/posts/*": ({ params: [userId, postId] }) => resolvePost(userId, postId),
+    "/posts": ({ params: [userId] }) => resolvePostList(userId),
   },
-  "/nested/deep-url/*/test":  ({ params: [myParam] }) => resolveFoo(myParam),
+});
+```
+
+You can also compile only part of the routes like this:
+
+```ts
+{
+  users: {
+    "*": {
+      ...compileRoutes({
+        "/posts/*": ({ params: [userId, postId] }) => resolvePost(userId, postId),
+        "/posts": ({ params: [userId] }) => resolvePostList(userId),
+      }),
+    },
+  },
 }
 ```
 
