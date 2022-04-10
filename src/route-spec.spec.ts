@@ -1,8 +1,8 @@
-import { compileRoutes } from "./route-spec";
+import { compileRoutes, verifyRoutes } from "./route-spec";
+
+const resolve = () => "foo";
 
 describe("compileRoutes()", () => {
-  const resolve = () => "foo";
-
   it("should remove trailing slashes", () => {
     const routes = {
       "/": resolve,
@@ -72,5 +72,41 @@ describe("compileRoutes()", () => {
     compileRoutes(routes);
 
     expect(Date.now() - start).toBeLessThan(100);
+  });
+});
+
+describe("verifyRoutes()", () => {
+  it("should pass with correct routes", () => {
+    verifyRoutes({
+      "/": resolve,
+      "?": () => true,
+      foo: {
+        "some-nested": resolve,
+      },
+    });
+  });
+
+  it("should fail with leading slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "/x": resolve,
+      })
+    ).toThrow(/\/x/);
+  });
+
+  it("should fail with trailing slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "x/": resolve,
+      })
+    ).toThrow(/x\//);
+  });
+
+  it("should fail with intermediate slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "x/y": resolve,
+      })
+    ).toThrow(/x\/y/);
   });
 });

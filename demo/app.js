@@ -1,7 +1,7 @@
-import { compileRoutes, Router } from "/dist/index.js";
+import { compileRoutes, Router, verifyRoutes } from "/dist/index.js";
 
 const router = new Router(
-  {
+  verifyRoutes({
     "/": (x) => {
       console.log(x);
       return load("routes/root.html");
@@ -21,7 +21,7 @@ const router = new Router(
         return load("routes/foo.html");
       },
     }),
-  },
+  }),
   {
     notFound: ({ href, go }) => {
       console.warn("Route not found", href);
