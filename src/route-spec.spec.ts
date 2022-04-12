@@ -1,17 +1,15 @@
-import { compileRoutes } from "./route-spec";
+import { compileRoutes, verifyRoutes } from "./route-spec";
+
+const resolve = () => "foo";
 
 describe("compileRoutes()", () => {
-  const resolve = () => "foo";
-
   it("should remove trailing slashes", () => {
     const routes = {
       "/": resolve,
       "/foo": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       "/": resolve,
       foo: resolve,
     });
@@ -22,9 +20,7 @@ describe("compileRoutes()", () => {
       "/foo/bar": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         bar: resolve,
       },
@@ -36,9 +32,7 @@ describe("compileRoutes()", () => {
       "///foo//bar//": resolve,
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         bar: resolve,
       },
@@ -54,9 +48,7 @@ describe("compileRoutes()", () => {
       },
     };
 
-    compileRoutes(routes);
-
-    expect(routes).toEqual({
+    expect(compileRoutes(routes)).toEqual({
       foo: {
         "/": resolve,
         bar: {
@@ -78,6 +70,43 @@ describe("compileRoutes()", () => {
 
     const start = Date.now();
     compileRoutes(routes);
+
     expect(Date.now() - start).toBeLessThan(100);
+  });
+});
+
+describe("verifyRoutes()", () => {
+  it("should pass with correct routes", () => {
+    verifyRoutes({
+      "/": resolve,
+      "?": () => true,
+      foo: {
+        "some-nested": resolve,
+      },
+    });
+  });
+
+  it("should fail with leading slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "/x": resolve,
+      })
+    ).toThrow(/\/x/);
+  });
+
+  it("should fail with trailing slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "x/": resolve,
+      })
+    ).toThrow(/x\//);
+  });
+
+  it("should fail with intermediate slash", () => {
+    expect(() =>
+      verifyRoutes({
+        "x/y": resolve,
+      })
+    ).toThrow(/x\/y/);
   });
 });

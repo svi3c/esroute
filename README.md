@@ -67,7 +67,7 @@ const router = new Router<string>({
 
 ### 🏎 Fast startup and runtime
 
-esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance has only minimal processing to provide more configuration comfort.
+esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance by default is not compiled, to ensure maximum performance.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
 
@@ -93,20 +93,6 @@ The `Router` constructor takes two arguments: A `RouteSpec` and a `RouterConf` o
 
 ### The `RouteSpec`
 
-`RouteSpec` is a recursive type:
-
-```ts
-type RouteSpec<T> =
-  | {
-      [K in string]: K extends "/"
-        ? Resolve<T>
-        : K extends "?"
-        ? Guard
-        : RouteSpec<T>;
-    }
-  | Resolve<T>;
-```
-
 Example:
 
 ```ts
@@ -124,10 +110,44 @@ Example:
     "*": {
       "foo": ({ params: [myParam] }) => resolveFoo(myParam),
     }
-  },
-  "/nested/deep-url/*/test":  ({ params: [myParam] }) => resolveFoo(myParam),
+  }
 }
 ```
+
+### Compilation
+
+If you configure the routes like listed above, no compilation step is required.
+For convenience, there is a `compileRoutes()` function that you can use to write
+routes in a maybe more concise way. Of course this precompilation has a bit of performance and payload cost. So if you have a lot of routes, you might consider using the already optimized format above.
+
+```ts
+compileRoutes({
+  "/users/*": {
+    "/posts/*": ({ params: [userId, postId] }) => resolvePost(userId, postId),
+    "/posts": ({ params: [userId] }) => resolvePostList(userId),
+  },
+});
+```
+
+You can also compile only part of the routes like this:
+
+```ts
+{
+  users: {
+    "*": {
+      ...compileRoutes({
+        "/posts/*": ({ params: [userId, postId] }) => resolvePost(userId, postId),
+        "/posts": ({ params: [userId] }) => resolvePostList(userId),
+      }),
+    },
+  },
+}
+```
+
+### Verification
+
+To ensure that your routes are setup correctly, it makes sense to verify your routes configuration.
+For maximum performance and treeshakability, the route verification is not baked-in to the router. You can set it up such that it is only included at development time.
 
 ### The `RouterConf`
 

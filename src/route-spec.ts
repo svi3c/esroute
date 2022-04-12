@@ -17,11 +17,11 @@ export type RouteSpec<T> =
     }
   | Resolve<T>;
 
-export const compileRoutes = (spec: RouteSpec<any>): void => {
-  if (typeof spec !== "object") return;
+export const compileRoutes = <T>(spec: RouteSpec<T>): RouteSpec<T> => {
+  if (typeof spec !== "object") return spec;
   const toSplit: string[] = [];
   for (const key in spec) {
-    if (key.length === 1 || key.indexOf("/") < 0) compileRoutes(spec[key]);
+    if (key.length === 1 || !key.includes("/")) compileRoutes(spec[key]);
     else toSplit.push(key);
   }
   for (const key of toSplit) {
@@ -31,7 +31,8 @@ export const compileRoutes = (spec: RouteSpec<any>): void => {
     let sub: any = spec;
     for (const p of path) {
       if (!p) continue;
-      else if (typeof sub[p] !== "object") sub = sub[p] = { "/": sub[p] };
+      else if (p in sub && typeof sub[p] !== "object")
+        sub = sub[p] = { "/": sub[p] };
       else if (!(p in sub)) sub = sub[p] = {};
       else sub = sub[p];
     }
@@ -43,4 +44,25 @@ export const compileRoutes = (spec: RouteSpec<any>): void => {
     compileRoutes(sub[last]);
     delete spec[key];
   }
+  return spec;
+};
+
+export const verifyRoutes = (spec: RouteSpec<any>, _path: string[] = []) => {
+  if (
+    spec === null ||
+    spec === undefined ||
+    (typeof spec !== "object" && typeof spec !== "function")
+  )
+    throw new Error(
+      `Found invalid route definition '/${_path.join("/")}': ${spec}`
+    );
+  if (typeof spec === "object")
+    for (const key in spec) {
+      if (key.length > 1 && key.includes("/"))
+        throw new Error(
+          `Route '${key}', found in /${_path.join("/")} is invalid.`
+        );
+      else verifyRoutes(spec[key]);
+    }
+  return spec;
 };
