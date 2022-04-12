@@ -31,7 +31,8 @@ export const compileRoutes = <T>(spec: RouteSpec<T>): RouteSpec<T> => {
     let sub: any = spec;
     for (const p of path) {
       if (!p) continue;
-      else if (typeof sub[p] !== "object") sub = sub[p] = { "/": sub[p] };
+      else if (p in sub && typeof sub[p] !== "object")
+        sub = sub[p] = { "/": sub[p] };
       else if (!(p in sub)) sub = sub[p] = {};
       else sub = sub[p];
     }
@@ -53,7 +54,7 @@ export const verifyRoutes = (spec: RouteSpec<any>, _path: string[] = []) => {
     (typeof spec !== "object" && typeof spec !== "function")
   )
     throw new Error(
-      `Found invalid route definition '/${_path.join("/")}: ${spec}`
+      `Found invalid route definition '/${_path.join("/")}': ${spec}`
     );
   if (typeof spec === "object")
     for (const key in spec) {

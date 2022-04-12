@@ -13,10 +13,9 @@ createServer((req, res) => {
   const contentType = path.startsWith("dist")
     ? mime.js
     : mime[ext] ?? mime.html;
-  console.log(path, ext, contentType);
   res.setHeader("content-type", contentType);
   res.end(getFileContent(path, res));
-}).listen(8000);
+}).listen(8000, () => console.log(`Server listening on http://localhost:8000`));
 
 const getExt = (path) => extname(path).substring(1);
 
