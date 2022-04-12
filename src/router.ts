@@ -1,6 +1,10 @@
 import { NavMeta, NavOpts, PathOrHref } from "./nav-opts";
-import { Resolved, RouteResolver } from "./route-resolver";
-import { Resolve, RouteSpec } from "./route-spec";
+import {
+  defaultRouteResolver,
+  Resolved,
+  RouteResolver,
+} from "./route-resolver";
+import { compileRoutes, Resolve, RouteSpec, verifyRoutes } from "./route-spec";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 
@@ -19,19 +23,21 @@ export interface RouterConf<T> {
    * navigation and event.preventDefault() is called.
    */
   noClick?: boolean;
+  resolver: RouteResolver<T>;
 }
 
 export class Router<T> {
   resolution!: Promise<Resolved<T>>;
   private _resolved?: Resolved<T>;
   private _notFound: Resolve<T>;
-  private _resolver = new RouteResolver();
+  private _resolver: RouteResolver<T>;
   private _listeners = new Set<OnResolveListener<T>>();
 
   constructor(
     private routes: RouteSpec<T> = {},
-    { notFound = ({ go }) => go([]), noClick = false }: RouterConf<T> = {}
+    { notFound = ({ go }) => go([]), noClick = false, resolver }: RouterConf<T>
   ) {
+    this._resolver = resolver;
     this._notFound = notFound;
     this._initListeners(noClick);
   }
@@ -104,10 +110,19 @@ export class Router<T> {
   }
 
   private async _resolve(opts: NavOpts) {
-    return this._resolver.resolve(this.routes, opts, this._notFound);
+    return this._resolver(this.routes, opts, this._notFound);
   }
 }
 
 const isAnchorElement = (
   target: EventTarget | null
 ): target is HTMLAnchorElement => target instanceof HTMLAnchorElement;
+
+export const defaultRouter = <T>(
+  routeSpec: RouteSpec<T>,
+  opts: Partial<RouterConf<T>> = {}
+) =>
+  new Router<T>(verifyRoutes(compileRoutes(routeSpec)), {
+    resolver: defaultRouteResolver(),
+    ...opts,
+  });

@@ -1,13 +1,13 @@
 import { NavOpts } from "./nav-opts";
-import { RouteResolver } from "./route-resolver";
+import { defaultRouteResolver } from "./route-resolver";
 
 describe("Resolver", () => {
-  const resolver = new RouteResolver();
+  const resolver = defaultRouteResolver();
 
   it("should resolve a route with resolve fn", async () => {
     const navOpts = new NavOpts("/foo/bar");
 
-    const { value, opts } = await resolver.resolve(
+    const { value, opts } = await resolver(
       { foo: { bar: () => "foobar" } },
       navOpts,
       null
@@ -20,7 +20,7 @@ describe("Resolver", () => {
   it("should resolve a route with resolve fn on '/'", async () => {
     const navOpts = new NavOpts("/foo/bar");
 
-    const { value, opts } = await resolver.resolve(
+    const { value, opts } = await resolver(
       { foo: { bar: { "/": () => ({ foo: "bar" }) } } },
       navOpts,
       null
@@ -33,7 +33,7 @@ describe("Resolver", () => {
   it("should resolve a redirect via calling 'go()'", async () => {
     const navOpts = new NavOpts("/foo");
 
-    const { value, opts } = await resolver.resolve(
+    const { value, opts } = await resolver(
       { foo: ({ go }) => go("/bar"), bar: () => ({ foo: "bar" }) },
       navOpts,
       null
@@ -47,7 +47,7 @@ describe("Resolver", () => {
     const navOpts = new NavOpts("/foo");
 
     await expect(
-      resolver.resolve(
+      resolver(
         { foo: ({ go }) => go("/bar"), bar: ({ go }) => go("/foo") },
         navOpts,
         null
@@ -61,7 +61,7 @@ describe("Resolver", () => {
     const navOpts = new NavOpts("/foo", { state: 1 });
 
     await expect(
-      resolver.resolve(
+      resolver(
         { foo: ({ go, state }) => go("/foo", { state: state + 1 }) },
         navOpts,
         null
