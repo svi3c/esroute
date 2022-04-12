@@ -1,11 +1,6 @@
-import { mocked } from "jest-mock";
 import { NavOpts } from "./nav-opts";
-import { Resolved, RouteResolver } from "./route-resolver";
+import { Resolved } from "./route-resolver";
 import { Router } from "./router";
-
-jest.mock("./route-resolver", () => ({ RouteResolver: jest.fn() }));
-
-const MockRouteResolver = mocked(RouteResolver);
 
 const mock = <T>(obj: Partial<jest.Mocked<T>>) => obj as jest.Mocked<T>;
 const history = mock<History>({
@@ -25,22 +20,19 @@ const window = mock<Window>({
 Object.assign(global, { history, location, document, window });
 
 describe("Router", () => {
-  const resolver = mock<RouteResolver>({
-    resolve: jest.fn(),
-  });
+  const resolver = jest.fn();
   const notFound = () => 404;
   let router: Router<any>;
   let initialResolved: Resolved<any>;
 
   beforeEach(() => {
     jest.resetAllMocks();
-    MockRouteResolver.mockReturnValue(resolver);
     initialResolved = {
       value: "initial",
       opts: new NavOpts("/initial"),
     };
-    resolver.resolve.mockResolvedValueOnce(initialResolved);
-    router = new Router<any>({}, { notFound });
+    resolver.mockResolvedValueOnce(initialResolved);
+    router = new Router<any>({}, { notFound, resolver });
   });
 
   it("should subscribe to popstate and anchor click events", () => {
@@ -57,17 +49,17 @@ describe("Router", () => {
   describe("go()", () => {
     it("should navigate to route, if route matches", async () => {
       const opts = new NavOpts("/foo");
-      resolver.resolve.mockResolvedValue({ value: 42, opts });
+      resolver.mockResolvedValue({ value: 42, opts });
 
       await router.go("/foo");
 
-      expect(resolver.resolve).toHaveBeenCalledWith({}, opts, notFound);
+      expect(resolver).toHaveBeenCalledWith({}, opts, notFound);
       expect(history.pushState).toHaveBeenCalledWith(undefined, "", "/foo");
     });
 
     it("should replace the state, if replace flag is set", async () => {
       const opts = new NavOpts("/foo", { replace: true });
-      resolver.resolve.mockResolvedValue({ value: 42, opts });
+      resolver.mockResolvedValue({ value: 42, opts });
 
       await router.go("/foo");
 
@@ -87,7 +79,7 @@ describe("Router", () => {
     it("should call the listener when a navigation has finished", async () => {
       const onResolve = jest.fn();
       const resolved = { value: "changed", opts: new NavOpts("/abc") };
-      resolver.resolve.mockResolvedValueOnce(resolved);
+      resolver.mockResolvedValueOnce(resolved);
       router.onResolve(onResolve);
 
       await router.go("/abc");
@@ -98,7 +90,7 @@ describe("Router", () => {
     it("should return an unsubscribe callback", async () => {
       const onResolve = jest.fn();
       const resolved = { value: "changed", opts: new NavOpts("/abc") };
-      resolver.resolve.mockResolvedValueOnce(resolved);
+      resolver.mockResolvedValueOnce(resolved);
       const unsubscribe = router.onResolve(onResolve);
 
       unsubscribe();

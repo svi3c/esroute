@@ -1,4 +1,4 @@
-import { compileRoutes, Router, RouteSpec, verifyRoutes } from "../src";
+import { compileRoutes, defaultRouter, RouteSpec } from "../src";
 
 const routeSpec: RouteSpec<string> = {
   "/": (x) => {
@@ -21,8 +21,7 @@ const routeSpec: RouteSpec<string> = {
     },
   }),
 };
-verifyRoutes(routeSpec);
-const router = new Router(verifyRoutes(routeSpec), {
+const router = defaultRouter<string>(routeSpec, {
   notFound: ({ href, go }) => {
     console.warn("Route not found", href);
     return go([]);
