@@ -23,18 +23,14 @@ Esroute is written with no external dependencies, so it does not require you to 
 A configuration can look as simple as this:
 
 ```ts
-import { Router } from "esroute";
+import { defaultRouter } from "esroute";
 
-const router = new Router({
+const router = defaultRouter({
   "/": ({ go }) => go("/foo"),
   foo: () => load("routes/foo.html"),
-  nested: {
-    "/": () => load("routes/nested/index.html"),
-    "*": ({ params: [param] }) => {
-      console.log(param);
-      return load("routes/nested/dynamic.html");
-    },
-  },
+  nested: load("routes/nested/index.html"),
+  "nested/*": ({ params: [param] }) =>
+    load("routes/nested/dynamic.html", param),
 });
 
 router.onResolve(({ value }) => render(value));
@@ -43,7 +39,7 @@ router.onResolve(({ value }) => render(value));
 You can of course compose the configuration as you like, which allows you to easily modularize you route configuration:
 
 ```ts
-const router = new Router({
+const router = defaultRouter({
   "/": ({ go }) => go("/mod1"),
   mod1: mod1Routes,
   composed: {
@@ -67,9 +63,39 @@ const router = new Router<string>({
 
 ### 🏎 Fast startup and runtime
 
-esroute comes with no dependencies and is quite small. The route spec object that is passed into the router instance by default is not compiled, to ensure maximum performance.
+esroute comes with no dependencies and is quite small.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
+
+You can decide to use the more concise, but non-optimizable version of creating a router like this:
+
+```ts
+import { defaultRouter } from "esroute";
+
+const router = defaultRouter(myRouteSpec, myConfig);
+```
+
+Or you can use the more verbose, but more tweakable approach. This is equivalent to short form setup listed above:
+
+```ts
+import {
+  Router,
+  compileRoutes,
+  defaultRouteResolver,
+  verifyRoutes,
+} from "esroute";
+
+const router = new Router(verifyRoutes(compileRoutes(routeSpec)), {
+  resolver: defaultRouteResolver(),
+  ...myConfig,
+});
+```
+
+When using the constructor, you can tweak performance even more:
+
+- You can decide not to use nested route strings in the configuration
+- You may run `verifyRoutes()` only at development time and let it tree-shake when bundling you app for production
+- If you want to take control over the route resolution, you can exchange the `defaultRouteResolver`.
 
 ### 🛡 Route guards
 
