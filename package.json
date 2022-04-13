@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc & npm run esbuild",
     "esbuild": "esbuild src/index.ts --bundle --sourcemap --format=esm --outfile=dist/index.js",
-    "esbuild:demo": "esbuild demo/app.ts --bundle --sourcemap --minify --watch --format=iife --outfile=demo/app.js",
+    "esbuild:demo": "esbuild demo/demo.ts --bundle --sourcemap --minify --watch --format=iife --outfile=demo/demo.js",
     "test": "jest",
     "start": "node demo/server.js & npm run esbuild:demo",
     "prepublish": "tsc"
