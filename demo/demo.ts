@@ -30,6 +30,6 @@ const router = defaultRouter<string>(routeSpec, {
 
 router.onResolve(({ value }) => render(value));
 
-const load = (path) => fetch(path).then((res) => res.text());
+const load = (path: string) => fetch(path).then((res) => res.text());
 
-const render = (content) => (document.body.innerHTML = content);
+const render = (content: string) => (document.body.innerHTML = content);

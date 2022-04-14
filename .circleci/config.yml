@@ -31,7 +31,7 @@ jobs:
           command: npm test
       - run:
           name: Typecheck
-          command: npx tsc --noEmit --emitDeclarationOnly false
+          command: npm run typecheck
 
 workflows:
   # Below is the definition of your workflow.
