@@ -59,7 +59,7 @@ const traverseRoutes = async <T>(
     if (route === null || typeof route === "function") return null;
     const child: RouteSpec<T> | null = getRouteChild(route, opts, part);
     const guardResult = await (route["?"] as Guard)?.(opts);
-    if (guardResult) return () => guardResult;
+    if (guardResult instanceof NavOpts) return () => guardResult;
     route = child;
   }
   return route;

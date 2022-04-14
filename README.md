@@ -51,15 +51,30 @@ const router = defaultRouter({
 
 ### ✅ Typesafe value resolution
 
-A `Resolve<T> = (navOpts: NavOpts) => T | NavOpts | Promise<T | NavOpts>;` is a function type that derives a value from the navigation options. This value is of a certain type and the router can be restricted to allow only certain value types.
+The router can be restricted to allow only certain resolution types.
 
 ```ts
-const router = new Router<string>({
+const router = defaultRouter<string>({
   "/": () => "some nice value",
   async: loadString(),
   weird: () => 42, // TS Error
 });
 ```
+
+_Note_: You should never directly assign a route spec to a variable/constant of type `RouteSpec<T, X>`. Instead, you should use the `routeBuilder<T>` to make sure that typechecking works properly:
+
+```ts
+const routes = routeBuilder<string>();
+
+export const routesChunk = routeBuilder({
+  "/": () => "some nice template",
+  "?": ({ go }) => !loggedIn && go("/login"),
+});
+```
+
+[Here](https://www.typescriptlang.org/play?ts=4.6.2#code/C4TwDgpgBAcghgNwPJmAZygXigbwL4DcAsAFCmiRQBKEaA9gDYIQA8AKgHxZQAUpUUAHaIU6AFywRqNKQCUWLmygAfScmkqoABQBOdALYBLNKyWr469B2JkSFaAHEArnB0ATGmicNg3BHUM3TQAjOkYIOEFNC1E0G3soZ1cg7B49J2AICRjpeUwuJPdPb19VXQNjVkKPWhLrUnJwaCo6DIgAZUgAY3YAGigADSgIAA9MwTcMfG5IkC5Mfk1PRmZ2DkXVHEWBAQBtAGkoQyiAawgQOgAzQYBdCUPR8cmoACIAehftnYEAfmpaFamdYkb7fe7DMYQCYYF4-T4g0G-RIudxfMHUVqZToQHpsfoDA43eoIgSEBokLp0QRoXzpTIAISchgYbggOiwi3YM0Ecx4eWBAhYQ0eUOe02wsw4PDQ3QkLTa2Nx+I4sjlmI63TWCi+MpxNlIlOptPVGGwdIgjOZrJ0LBpOmOAHMpbJ9RSqTSoJSdDoccAGCAAMIACxxZw8Ju45rQPC2CPeLwk+F6i1hCd4-NeI3heBd5MNHuOXp9XT9gZDXTD8syaDVCs1dsd81wKY+ibw-Tebyg7SDrRZUEucGZEip-v+9CYrAbgidUDgDAYdAA7hA3AA6FNwiR8hSZl5QTvd3veIKD4dQUcgZHJOcL5erjckMm2fPhNeLh08Iu+-3B0OrqtaFkIA) is a TypeScript playground snapshot that highlights the issue without the routeBuilder function. If you come up with a better solution, a PR is very welcome.
+
+Aside from this, you can pass your route spec inline into other functions like `defaultRouter<T>()`, `new Router<T>()`, `compileRoutes<T>()`, `verifyRoutes<T>()`.
 
 ### 🏎 Fast startup and runtime
 

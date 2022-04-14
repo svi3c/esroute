@@ -4,22 +4,29 @@ export type Resolve<T> = (
   navOpts: NavOpts
 ) => T | NavOpts | Promise<T | NavOpts>;
 
-export type GuardResult = void | false | NavOpts;
+export type GuardResult = void | boolean | NavOpts;
 export type Guard = (route: NavOpts) => GuardResult | Promise<GuardResult>;
 
-export type RouteSpec<T> =
+export type RouteSpec<T, X extends {} = any> =
+  | Resolve<T>
   | {
-      [K in string]: K extends "/"
+      [K in keyof X]: K extends "/"
         ? Resolve<T>
         : K extends "?"
         ? Guard
-        : RouteSpec<T>;
-    }
-  | Resolve<T>;
+        : RouteSpec<T, X[K]>;
+    };
 
-export const compileRoutes = <T>(spec: RouteSpec<T>): RouteSpec<T> => {
+export const routeBuilder =
+  <T = any>() =>
+  <X extends {} = any>(spec: RouteSpec<T, X>): RouteSpec<T> =>
+    spec;
+
+export const compileRoutes = <T, X extends {} = {}>(
+  spec: RouteSpec<T, X>
+): RouteSpec<T> => {
   if (typeof spec !== "object") return spec;
-  const toSplit: string[] = [];
+  const toSplit: Array<keyof X & string> = [];
   for (const key in spec) {
     if (key.length === 1 || !key.includes("/")) compileRoutes(spec[key]);
     else toSplit.push(key);
@@ -47,7 +54,10 @@ export const compileRoutes = <T>(spec: RouteSpec<T>): RouteSpec<T> => {
   return spec;
 };
 
-export const verifyRoutes = (spec: RouteSpec<any>, _path: string[] = []) => {
+export const verifyRoutes = <T, X extends {} = {}>(
+  spec: RouteSpec<T, X>,
+  _path: string[] = []
+): RouteSpec<T> => {
   if (
     spec === null ||
     spec === undefined ||

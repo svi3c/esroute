@@ -1,4 +1,4 @@
 node_modules
 dist
-demo/app.js
-demo/app.js.map
+demo/demo.js
+demo/demo.js.map
