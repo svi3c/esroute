@@ -26,7 +26,7 @@ export interface RouterConf<T> {
   resolver: RouteResolver<T>;
 }
 
-export class Router<T> {
+export class Router<T, X extends {} = any> {
   resolution!: Promise<Resolved<T>>;
   private _resolved?: Resolved<T>;
   private _notFound: Resolve<T>;
@@ -34,7 +34,7 @@ export class Router<T> {
   private _listeners = new Set<OnResolveListener<T>>();
 
   constructor(
-    private routes: RouteSpec<T> = {},
+    private routes: RouteSpec<T, X>,
     { notFound = ({ go }) => go([]), noClick = false, resolver }: RouterConf<T>
   ) {
     this._resolver = resolver;
@@ -118,8 +118,8 @@ const isAnchorElement = (
   target: EventTarget | null
 ): target is HTMLAnchorElement => target instanceof HTMLAnchorElement;
 
-export const defaultRouter = <T>(
-  routeSpec: RouteSpec<T>,
+export const defaultRouter = <T, X extends {} = any>(
+  routeSpec: RouteSpec<T, X>,
   opts: Partial<RouterConf<T>> = {}
 ) =>
   new Router<T>(verifyRoutes(compileRoutes(routeSpec)), {
