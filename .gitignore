@@ -1,4 +1,10 @@
-node_modules
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 dist
 demo/demo.js
 demo/demo.js.map

@@ -1,0 +1,26 @@
+{
+  "name": "esroute",
+  "version": "0.3.0",
+  "description": "A small efficient framework-agnostic client-side routing library, written in TypeScript.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc & npm run esbuild",
+    "esbuild": "esbuild src/index.ts --bundle --sourcemap --format=esm --outfile=dist/index.js",
+    "esbuild:demo": "esbuild demo/demo.ts --bundle --sourcemap --minify --watch --format=iife --outfile=demo/demo.js",
+    "start": "node demo/server.js & npm run esbuild:demo",
+    "typecheck": "tsc -p tsconfig-typecheck.json",
+    "prepublish": "npm run build & npm run typecheck"
+  },
+  "keywords": [
+    "route",
+    "routing"
+  ],
+  "repository": "github:svi3c/esroute",
+  "homepage": "https://github.com/svi3c/esroute/tree/main/packages/esroute",
+  "author": "Sven Rogge <sreglitzki@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.14.34",
+    "typescript": "^4.6.3"
+  }
+}
