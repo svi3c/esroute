@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "preserveWatchOutput": true,
-    "outDir": "./dist"
+    "experimentalDecorators": true
   },
-  "files": ["src/index.ts"]
+  "files": ["src/demo.ts"]
 }

@@ -1,4 +1,4 @@
-import { routeBuilder } from "../src";
+import { routeBuilder } from "esroute";
 
 export const createRoutes = routeBuilder<string>();
 
