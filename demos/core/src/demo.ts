@@ -1,4 +1,4 @@
-import { defaultRouter } from "../src";
+import { defaultRouter } from "esroute";
 import { aRoutes } from "./a";
 import { createRoutes, load } from "./routing";
 

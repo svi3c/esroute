@@ -15,7 +15,7 @@ createServer((req, res) => {
     : mime[ext] ?? mime.html;
   res.setHeader("content-type", contentType);
   res.end(getFileContent(path, res));
-}).listen(8000, () => console.log(`Server listening on http://localhost:8000`));
+}).listen(3031, () => console.log(`Server listening on http://localhost:3001`));
 
 const getExt = (path) => extname(path).substring(1);
 
@@ -31,6 +31,6 @@ const getFileContent = (path) => {
   try {
     return readFileSync(path);
   } catch (e) {
-    return e.code === "ENOENT" ? readFileSync("demo/index.html") : e.stack;
+    return e.code === "ENOENT" ? readFileSync("./index.html") : e.stack;
   }
 };

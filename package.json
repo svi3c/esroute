@@ -1,7 +1,7 @@
 {
   "name": "esroute-workspaces",
   "scripts": {
-    "build": "yarn workspaces foreach -vp run build",
+    "build": "yarn workspaces foreach -vtp run build",
     "test": "jest",
     "start": "yarn workspaces foreach -vpi run start",
     "typecheck": "yarn workspaces foreach -vp run typecheck"
@@ -17,7 +17,8 @@
     "typescript": "^4.6.3"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "demos/*"
   ],
   "packageManager": "yarn@3.2.0"
 }

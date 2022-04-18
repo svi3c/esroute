@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "preserveWatchOutput": true,
+    "emitDeclarationOnly": false,
+    "outDir": "dist",
+    "experimentalDecorators": true
+  },
+  "files": ["src/demo.ts"]
+}

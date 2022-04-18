@@ -3,6 +3,5 @@
   "compilerOptions": {
     "noEmit": true,
     "emitDeclarationOnly": false
-  },
-  "files": ["src/index.ts", "demo/demo.ts"]
+  }
 }

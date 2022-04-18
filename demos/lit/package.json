@@ -1,0 +1,24 @@
+{
+  "name": "@esroute/demo-lit",
+  "version": "0.1.0",
+  "description": "A demo package for esroute lit",
+  "main": "dist/index.js",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "start": "vite"
+  },
+  "repository": "github:svi3c/esroute",
+  "homepage": "https://github.com/svi3c/esroute/tree/main/demos/lit",
+  "author": "Sven Rogge <sreglitzki@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^4.6.3",
+    "vite": "^2.9.5"
+  },
+  "dependencies": {
+    "@esroute/lit": "*",
+    "esroute": "*",
+    "lit": "^2.2.2"
+  }
+}
