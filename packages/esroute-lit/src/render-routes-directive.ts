@@ -1,5 +1,5 @@
 import { noChange } from "lit";
-import { AsyncDirective, directive } from "lit/async-directive";
+import { AsyncDirective, directive } from "lit/async-directive.js";
 import { DirectiveResult, PartInfo, PartType } from "lit/directive.js";
 import { Router } from "./adapters";
 
