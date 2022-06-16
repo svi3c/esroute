@@ -1,6 +1,6 @@
 import { noChange } from "lit";
-import { AsyncDirective, directive } from "lit/async-directive.js";
-import { PartInfo, PartType } from "lit/directive.js";
+import { AsyncDirective, directive } from "lit/async-directive";
+import { DirectiveResult, PartInfo, PartType } from "lit/directive.js";
 import { Router } from "./adapters";
 
 class RenderRoutesDirective extends AsyncDirective {
@@ -37,4 +37,8 @@ class RenderRoutesDirective extends AsyncDirective {
   }
 }
 
-export const renderRoutes = directive(RenderRoutesDirective);
+export const renderRoutes: (
+  router: Router
+) => DirectiveResult<typeof RenderRoutesDirective> = directive(
+  RenderRoutesDirective
+);

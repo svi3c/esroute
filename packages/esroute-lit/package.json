@@ -4,7 +4,7 @@
   "description": "A small efficient client-side routing library for lit, written in TypeScript.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rm -r dist && tsc & yarn esbuild",
+    "build": "rm -rf dist && tsc & yarn esbuild",
     "esbuild": "esbuild src/index.ts --bundle --sourcemap --format=esm --external:lit --external:esroute --outfile=dist/index.js",
     "start": "yarn esbuild --watch & yarn typecheck --watch",
     "typecheck": "tsc -p tsconfig-check.json",
