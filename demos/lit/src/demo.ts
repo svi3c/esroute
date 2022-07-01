@@ -1,6 +1,8 @@
-import { createRoutes, defaultRouter, renderRoutes } from "@esroute/lit";
+import { createRoutes, defaultRouter, Guard, renderRoutes } from "@esroute/lit";
 import { html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
+
+const g: Guard = () => undefined;
 
 const myRoutes = createRoutes({
   "/": async () => {
@@ -19,6 +21,7 @@ const myRoutes = createRoutes({
     await import("./routes/foo");
     return html`<esroute-foo greeting=${`${param1} ${param2}`}></esroute-foo>`;
   },
+  "?": g,
 });
 
 const router = defaultRouter(myRoutes, {
