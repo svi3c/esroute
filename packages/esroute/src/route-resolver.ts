@@ -54,15 +54,28 @@ const traverseRoutes = async <T>(
   routes: RouteSpec<T>,
   opts: NavOpts
 ): Promise<RouteSpec<T> | null> => {
-  let route: RouteSpec<T> | null = routes;
+  let route: RouteSpec<T> = routes;
   for (const part of opts.path) {
-    if (route === null || typeof route === "function") return null;
+    if (typeof route === "function") return null;
     const child: RouteSpec<T> | null = getRouteChild(route, opts, part);
-    const guardResult = await (route["?"] as Guard)?.(opts);
-    if (guardResult instanceof NavOpts) return () => guardResult;
+    if (child === null) return null;
+    const gr = await checkGuard(route, opts);
+    if (gr) return gr;
     route = child;
   }
-  return route;
+  if (typeof route === "function") return route;
+  const gr = await checkGuard(route, opts);
+  return gr || route;
+};
+
+const checkGuard = <T>(
+  route: Exclude<RouteSpec<T>, Resolve<T>>,
+  opts: NavOpts
+): false | Promise<false | (() => NavOpts)> => {
+  if (!("?" in route)) return false;
+  return Promise.resolve((route["?"] as Guard)(opts)).then(
+    (gr) => gr instanceof NavOpts && (() => gr)
+  );
 };
 
 const getRouteChild = <T>(
