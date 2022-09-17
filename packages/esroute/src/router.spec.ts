@@ -1,6 +1,3 @@
-// const mockResolve = vi.fn();
-// vi.mock("./route-resolver", () => ({ resolve: mockResolve }));
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
 import { Router } from "./router";

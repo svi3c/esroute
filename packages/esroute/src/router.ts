@@ -94,7 +94,7 @@ export class Router<T = any> {
     const initialOpts = new NavOpts(`${pathname}${search}`, { state: state });
     const { opts } = await this._applyResolution(this._resolve(initialOpts));
 
-    if (!opts.equals(initialOpts)) {
+    if (!opts.eq(initialOpts)) {
       this._updateState(
         new NavOpts(opts.path, {
           replace: true,
@@ -114,8 +114,8 @@ export class Router<T = any> {
 
   private _updateState({ state, replace, href }: NavOpts) {
     const history = window.history;
-    const updateState = history[replace ? "replaceState" : "pushState"];
-    updateState.call(history, state, "", href);
+    if (replace) history.replaceState(state, "", href);
+    else history.pushState(state, "", href);
   }
 
   private async _resolve(opts: NavOpts) {

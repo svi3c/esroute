@@ -23,11 +23,6 @@ export const resolve = async <T>(
   const navPath = new Array<NavOpts>();
   while (value instanceof NavOpts && navPath.length <= MAX_REDIRECTS) {
     opts = value;
-    const collision = navPath.find((o) => o.equals(opts));
-    if (collision)
-      throw new Error(
-        `Detected redirect loop: ${[...navPath, collision].join(" -> ")}`
-      );
     navPath.push(opts);
     const resolves = getResolves(routes, opts) ?? [notFound];
     for (const resolve of resolves) {
@@ -37,7 +32,11 @@ export const resolve = async <T>(
   }
 
   if (navPath.length > MAX_REDIRECTS)
-    throw new Error(`Exceeded max redirects: ${navPath.join(" -> ")}`);
+    throw new Error(
+      `More than ${MAX_REDIRECTS} redirects: ${navPath
+        .map((n) => n.href)
+        .join(" -> ")}`
+    );
 
   return { value: value as T, opts };
 };

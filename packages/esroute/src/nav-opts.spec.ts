@@ -10,10 +10,9 @@ describe("NavOpts", () => {
       expect(opts.path).toBe(path);
       expect(opts).toEqual(
         expect.objectContaining({
-          pathString: "/foo/bar",
           href: "/foo/bar",
+          path: ["foo", "bar"],
           search: {},
-          searchString: "",
         })
       );
     });
@@ -25,10 +24,8 @@ describe("NavOpts", () => {
       expect(opts).toEqual(
         expect.objectContaining({
           path: ["foo", "bar"],
-          pathString: "/foo/bar",
           href,
           search: { a: "b" },
-          searchString: "a=b",
         })
       );
     });
@@ -52,20 +49,6 @@ describe("NavOpts", () => {
         expect.objectContaining({
           href: "/foo/bar?a=c",
           search: { a: "c" },
-          searchString: "a=c",
-        })
-      );
-    });
-
-    it("should take a string as search option which has higher prio than the search part of the href", () => {
-      const href = "/foo/bar?a=b";
-      const opts = new NavOpts(href, { search: "?a=c" });
-
-      expect(opts).toEqual(
-        expect.objectContaining({
-          href: "/foo/bar?a=c",
-          search: { a: "c" },
-          searchString: "a=c",
         })
       );
     });

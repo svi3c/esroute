@@ -81,20 +81,6 @@ describe("Resolver", () => {
       expect(opts).toEqual(expect.objectContaining(new NavOpts("/bar")));
     });
 
-    it("should fail on a redirect loop", async () => {
-      const navOpts = new NavOpts("/foo");
-
-      await expect(
-        resolve(
-          { foo: ({ go }) => go("/bar"), bar: ({ go }) => go("/foo") },
-          navOpts,
-          mockNotFound
-        )
-      ).rejects.toEqual(
-        new Error("Detected redirect loop: /foo -> /bar -> /foo")
-      );
-    });
-
     it("should fail on too many redirects", async () => {
       const navOpts = new NavOpts("/foo", { state: 1 });
 
@@ -105,7 +91,7 @@ describe("Resolver", () => {
           mockNotFound
         )
       ).rejects.toEqual(
-        new Error(`Exceeded max redirects: ${"/foo -> ".repeat(10)}/foo`)
+        new Error(`More than 10 redirects: ${"/foo -> ".repeat(10)}/foo`)
       );
     });
   });
