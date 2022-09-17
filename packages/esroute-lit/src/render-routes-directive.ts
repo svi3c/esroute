@@ -1,7 +1,7 @@
+import { Router } from "esroute";
 import { noChange } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
 import { DirectiveResult, PartInfo, PartType } from "lit/directive.js";
-import { Router } from "./adapters";
 
 class RenderRoutesDirective extends AsyncDirective {
   private _router?: Router;

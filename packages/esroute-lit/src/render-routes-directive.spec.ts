@@ -3,7 +3,7 @@ import { html, render } from "lit";
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderRoutes } from "./render-routes-directive";
 
-const router = new Router({
+const router = new Router<any>({
   "": async ({}, next) => next ?? html`test`,
   foo: async () => html`foo`,
   bar: {

@@ -29,7 +29,7 @@ export const resolve = async <T>(
         `Detected redirect loop: ${[...navPath, collision].join(" -> ")}`
       );
     navPath.push(opts);
-    const resolves = getRouteResolves(routes, opts) ?? [notFound];
+    const resolves = getResolves(routes, opts) ?? [notFound];
     for (const resolve of resolves) {
       value = await resolve(opts, value instanceof NavOpts ? undefined : value);
       if (value instanceof NavOpts) break;
@@ -42,38 +42,41 @@ export const resolve = async <T>(
   return { value: value as T, opts };
 };
 
-const getRouteResolves = <T>(
-  routes: Routes<T>,
-  opts: NavOpts
-): Resolve<T>[] | null => {
-  const resolves: Resolve<T>[] = [];
-  let route: Routes<T> | Resolve<T> = routes;
+const getResolves = (root: Routes, opts: NavOpts): Resolve[] | null => {
+  const resolves: Resolve[] = [];
+  let routes: Routes | Resolve | null = root;
   for (const part of opts.path) {
-    if (typeof route === "function") return null;
-    if ("" in route) resolves.unshift(route[""] as Resolve<T>);
-    const child: Routes<T> | Resolve<T> | null = getRouteChild(
-      route,
-      opts,
-      part
-    );
-    if (child === null) return null;
-    route = child;
+    if (!routes) return null;
+    if (typeof routes === "function") return null;
+    routes = getChildren(routes, opts, part, resolves);
   }
-  if (typeof route === "function") resolves.unshift(route);
-  else if ("" in route) resolves.unshift(route[""] as Resolve<T>);
-  else return null;
-  return resolves;
-};
-
-const getRouteChild = <T>(
-  route: Routes<T>,
-  opts: NavOpts,
-  part: string
-): Routes<T> | Resolve<T> | null => {
-  if (part in route) return route[part];
-  else if ("*" in route) {
-    opts.params.push(part);
-    return route["*"];
+  if (typeof routes === "function") {
+    resolves.unshift(routes);
+    return resolves;
+  }
+  if (routes && typeof routes[""] === "function") {
+    resolves.unshift(routes[""]);
+    return resolves;
   }
   return null;
+};
+
+const getChildren = (
+  routes: Routes,
+  opts: NavOpts,
+  part: string,
+  resolves: Resolve[]
+): Routes | Resolve | null => {
+  if (part in routes) {
+    if (typeof routes[""] === "function")
+      resolves.unshift(routes[""] as Resolve);
+    return routes[part];
+  }
+  if ("*" in routes) {
+    opts.params.push(part);
+    return routes["*"];
+  }
+  const virtual = routes[""];
+  if (!virtual || typeof virtual === "function") return null;
+  return getChildren(virtual, opts, part, resolves);
 };

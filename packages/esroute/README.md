@@ -117,7 +117,6 @@ const router = new Router({
 ```
 
 In this sczenario we have the `memberRoutes` next to the `/login` route.
-TODO: Implement
 
 ## Router configuration
 
