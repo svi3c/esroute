@@ -1,8 +1,8 @@
-import { defaultRouter } from "esroute";
+import { defaultRouter, Route } from "esroute";
 import { aRoutes } from "./a";
-import { createRoutes, load } from "./routing";
+import { load } from "./routing";
 
-const myRoutes = createRoutes({
+const myRoutes: Route<string> = {
   "/": (x) => {
     console.log(x);
     return load("routes/root.html");
@@ -21,7 +21,7 @@ const myRoutes = createRoutes({
     return load("routes/foo.html");
   },
   a: aRoutes,
-});
+};
 
 const router = defaultRouter(myRoutes, {
   notFound: ({ href, go }) => {

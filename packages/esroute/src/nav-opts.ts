@@ -6,7 +6,7 @@ export interface NavMeta {
   replace?: boolean;
 }
 
-export class NavOpts {
+export class NavOpts<T = any> {
   readonly state: any;
   readonly params: string[] = [];
   readonly replace?: boolean;

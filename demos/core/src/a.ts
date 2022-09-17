@@ -1,5 +1,6 @@
-import { createRoutes, load } from "./routing";
+import { Route } from "esroute";
+import { load } from "./routing";
 
-export const aRoutes = createRoutes({
+export const aRoutes: Route<string> = {
   "/": () => load("routes/foo.html"),
-});
+};

@@ -1,67 +1,68 @@
+// const mockResolve = vi.fn();
+// vi.mock("./route-resolver", () => ({ resolve: mockResolve }));
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
-import { Resolved } from "./route-resolver";
 import { Router } from "./router";
 
-const mock = <T>(obj: Partial<jest.Mocked<T>>) => obj as jest.Mocked<T>;
-const history = mock<History>({
-  pushState: jest.fn(),
-  replaceState: jest.fn(),
-});
-const location = {} as Location;
-const document = mock<Document>({ addEventListener: jest.fn() });
-const window = mock<Window>({
-  history,
-  location,
-  addEventListener: jest.fn(),
-  removeEventListener: jest.fn(),
-  document,
-});
+vi.spyOn(history, "replaceState");
+vi.spyOn(history, "pushState");
 
 Object.assign(global, { history, location, document, window });
 
 describe("Router", () => {
-  const resolver = jest.fn();
-  const notFound = () => 404;
+  const onResolve = vi.fn();
   let router: Router<any>;
-  let initialResolved: Resolved<any>;
-
   beforeEach(() => {
-    jest.resetAllMocks();
-    initialResolved = {
-      value: "initial",
-      opts: new NavOpts("/initial"),
-    };
-    resolver.mockResolvedValueOnce(initialResolved);
-    router = new Router<any>({}, { notFound, resolver });
+    router = new Router(
+      { "": ({}, next) => next ?? "index", foo: () => "foo" },
+      { defer: true }
+    );
   });
 
-  it("should subscribe to popstate and anchor click events", () => {
-    expect(window.addEventListener).toHaveBeenCalledWith(
-      "popstate",
-      expect.any(Function)
-    );
-    expect(window.document.addEventListener).toHaveBeenCalledWith(
-      "click",
-      expect.any(Function)
-    );
+  describe("init()", () => {
+    it("should subscribe to popstate and anchor click events", async () => {
+      router.onResolve(onResolve);
+      router.init();
+      location.href = "/foo";
+
+      window.dispatchEvent(new PopStateEvent("popstate"));
+      await router.resolution;
+
+      expect(onResolve).toHaveBeenCalledWith({
+        value: "foo",
+        opts: expect.any(NavOpts),
+      });
+    });
+
+    it("should subscribe to popstate and anchor click events", async () => {
+      router.onResolve(onResolve);
+      router.init();
+      const anchor = document.createElement("a");
+      document.body.appendChild(anchor);
+      // @ts-ignore
+      anchor.origin = "//";
+      anchor.pathname = "/foo";
+
+      anchor.click();
+      await router.resolution;
+
+      expect(onResolve).toHaveBeenCalledWith({
+        value: "foo",
+        opts: expect.any(NavOpts),
+      });
+    });
   });
 
   describe("go()", () => {
-    it("should navigate to route, if route matches", async () => {
-      const opts = new NavOpts("/foo");
-      resolver.mockResolvedValue({ value: 42, opts });
-
+    it("should navigate to route and push state", async () => {
       await router.go("/foo");
 
-      expect(resolver).toHaveBeenCalledWith({}, opts, notFound);
       expect(history.pushState).toHaveBeenCalledWith(undefined, "", "/foo");
     });
 
     it("should replace the state, if replace flag is set", async () => {
-      const opts = new NavOpts("/foo", { replace: true });
-      resolver.mockResolvedValue({ value: 42, opts });
-
-      await router.go("/foo");
+      await router.go("/foo", { replace: true });
 
       expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/foo");
     });
@@ -69,34 +70,38 @@ describe("Router", () => {
 
   describe("onResolve()", () => {
     it("should initially call listener, if there is already a current resolution", async () => {
-      const onResolve = jest.fn();
+      await router.go("/foo");
 
       router.onResolve(onResolve);
 
-      expect(onResolve).toHaveBeenNthCalledWith(1, initialResolved);
+      expect(onResolve).toHaveBeenNthCalledWith(1, {
+        value: "foo",
+        opts: expect.objectContaining(new NavOpts("foo")),
+      });
     });
 
     it("should call the listener when a navigation has finished", async () => {
-      const onResolve = jest.fn();
-      const resolved = { value: "changed", opts: new NavOpts("/abc") };
-      resolver.mockResolvedValueOnce(resolved);
+      await router.go("/foo");
       router.onResolve(onResolve);
 
-      await router.go("/abc");
+      await router.go("/foo");
 
-      expect(onResolve).toHaveBeenNthCalledWith(2, resolved);
+      expect(onResolve).toHaveBeenNthCalledWith(2, {
+        value: "foo",
+        opts: expect.objectContaining(new NavOpts("foo")),
+      });
     });
 
     it("should return an unsubscribe callback", async () => {
-      const onResolve = jest.fn();
-      const resolved = { value: "changed", opts: new NavOpts("/abc") };
-      resolver.mockResolvedValueOnce(resolved);
       const unsubscribe = router.onResolve(onResolve);
 
       unsubscribe();
 
-      await router.go("/abc");
-      expect(onResolve).not.toHaveBeenCalledWith(resolved);
+      await router.go("/foo");
+      expect(onResolve).not.toHaveBeenCalledWith({
+        value: "foo",
+        opts: expect.objectContaining(new NavOpts("foo")),
+      });
     });
   });
 });

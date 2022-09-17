@@ -1,14 +1,10 @@
 import { NavMeta, NavOpts, PathOrHref } from "./nav-opts";
-import {
-  defaultRouteResolver,
-  Resolved,
-  RouteResolver,
-} from "./route-resolver";
-import { compileRoutes, Resolve, RouteSpec, verifyRoutes } from "./route-spec";
+import { resolve, Resolved } from "./route-resolver";
+import { Resolve, Routes } from "./routes";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 
-export interface RouterConf<T> {
+export interface RouterConf<T = any> {
   /**
    * A fallback resolve funuction to use, if a route could not be found.
    * By default it redirects to the root path '/'.
@@ -18,28 +14,39 @@ export interface RouterConf<T> {
    * Whether the click handler for anchor elements shall not be installed.
    * This might make sense, if you want to take more control over how anchor
    * clicks are handled.
-   * By default we check whether the anchor element's origin property is equal
-   * to the window.location.origin property. If so, the router will take over
-   * navigation and event.preventDefault() is called.
    */
   noClick?: boolean;
-  resolver: RouteResolver<T>;
+  /**
+   * Whether the router should delay initialization until `start()` is
+   * called on the `Router` instance.
+   */
+  defer?: boolean;
+  /**
+   * A callback that is invoked whenever a route is resolved.
+   */
+  onResolve?: OnResolveListener<T>;
 }
 
-export class Router<T, X extends {} = any> {
+export class Router<T = any> {
   resolution!: Promise<Resolved<T>>;
   private _resolved?: Resolved<T>;
   private _notFound: Resolve<T>;
-  private _resolver: RouteResolver<T>;
+  private _noClick: boolean;
   private _listeners = new Set<OnResolveListener<T>>();
 
   constructor(
-    private routes: RouteSpec<T, X>,
-    { notFound = ({ go }) => go([]), noClick = false, resolver }: RouterConf<T>
+    public routes: Routes<T> = {},
+    {
+      notFound = ({ go }) => go([]),
+      noClick = false,
+      defer = false,
+      onResolve,
+    }: RouterConf<T> = {}
   ) {
-    this._resolver = resolver;
     this._notFound = notFound;
-    this._initListeners(noClick);
+    this._noClick = noClick;
+    if (onResolve) this.onResolve(onResolve);
+    if (!defer) this.init();
   }
 
   go(opts: NavOpts): Promise<void>;
@@ -59,15 +66,16 @@ export class Router<T, X extends {} = any> {
     return () => this._listeners.delete(listener);
   }
 
+  init() {
+    window.addEventListener("popstate", this._popStateListener);
+    if (!this._noClick)
+      document.addEventListener("click", this._linkClickListener);
+    this._popStateListener({ state: history.state });
+  }
+
   dispose() {
     window.removeEventListener("popstate", this._popStateListener);
     document.removeEventListener("click", this._linkClickListener);
-  }
-
-  private _initListeners(noClick: boolean) {
-    window.addEventListener("popstate", this._popStateListener);
-    if (!noClick) document.addEventListener("click", this._linkClickListener);
-    this._popStateListener({ state: history.state });
   }
 
   private _linkClickListener = (e: MouseEvent) => {
@@ -82,10 +90,11 @@ export class Router<T, X extends {} = any> {
 
   private _popStateListener = async ({ state }: { state: any }) => {
     const { pathname, search } = window.location;
+
     const initialOpts = new NavOpts(`${pathname}${search}`, { state: state });
     const { opts } = await this._applyResolution(this._resolve(initialOpts));
 
-    if (opts !== initialOpts) {
+    if (!opts.equals(initialOpts)) {
       this._updateState(
         new NavOpts(opts.path, {
           replace: true,
@@ -110,19 +119,10 @@ export class Router<T, X extends {} = any> {
   }
 
   private async _resolve(opts: NavOpts) {
-    return this._resolver(this.routes, opts, this._notFound);
+    return resolve(this.routes, opts, this._notFound);
   }
 }
 
 const isAnchorElement = (
   target: EventTarget | null
 ): target is HTMLAnchorElement => target instanceof HTMLAnchorElement;
-
-export const defaultRouter = <T, X extends {} = any>(
-  routeSpec: RouteSpec<T, X>,
-  opts: Partial<RouterConf<T>> = {}
-) =>
-  new Router<T>(verifyRoutes(compileRoutes(routeSpec)), {
-    resolver: defaultRouteResolver(),
-    ...opts,
-  });

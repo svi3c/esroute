@@ -1,14 +1,14 @@
+import { describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
-import { defaultRouteResolver } from "./route-resolver";
+import { resolve } from "./route-resolver";
 
 describe("Resolver", () => {
-  const resolver = defaultRouteResolver();
-  const mockNotFound = jest.fn();
+  const mockNotFound = vi.fn();
 
   it("should resolve a route with resolve fn", async () => {
     const navOpts = new NavOpts("/foo/bar");
 
-    const { value, opts } = await resolver(
+    const { value, opts } = await resolve(
       { foo: { bar: () => "foobar" } },
       navOpts,
       mockNotFound
@@ -21,8 +21,8 @@ describe("Resolver", () => {
   it("should resolve a route with resolve fn on '/'", async () => {
     const navOpts = new NavOpts("/foo/bar");
 
-    const { value, opts } = await resolver(
-      { foo: { bar: { "/": () => ({ foo: "bar" }) } } },
+    const { value, opts } = await resolve(
+      { foo: { bar: { "": () => ({ foo: "bar" }) } } },
       navOpts,
       mockNotFound
     );
@@ -34,7 +34,7 @@ describe("Resolver", () => {
   it("should resolve a redirect via calling 'go()'", async () => {
     const navOpts = new NavOpts("/foo");
 
-    const { value, opts } = await resolver(
+    const { value, opts } = await resolve(
       { foo: ({ go }) => go("/bar"), bar: () => ({ foo: "bar" }) },
       navOpts,
       mockNotFound
@@ -48,7 +48,7 @@ describe("Resolver", () => {
     const navOpts = new NavOpts("/foo");
 
     await expect(
-      resolver(
+      resolve(
         { foo: ({ go }) => go("/bar"), bar: ({ go }) => go("/foo") },
         navOpts,
         mockNotFound
@@ -62,7 +62,7 @@ describe("Resolver", () => {
     const navOpts = new NavOpts("/foo", { state: 1 });
 
     await expect(
-      resolver(
+      resolve(
         { foo: ({ go, state }) => go("/foo", { state: state + 1 }) },
         navOpts,
         mockNotFound
@@ -70,39 +70,5 @@ describe("Resolver", () => {
     ).rejects.toEqual(
       new Error(`Exceeded max redirects: ${"/foo -> ".repeat(10)}/foo`)
     );
-  });
-
-  it("should guard nested routes", async () => {
-    const navOpts = new NavOpts("/foo/bar");
-    const routeSpec = {
-      foo: {
-        bar: jest.fn(),
-        "?": jest.fn(),
-      },
-      "?": jest.fn(),
-    };
-
-    await resolver(routeSpec, navOpts, mockNotFound);
-
-    expect(routeSpec["?"]).toHaveBeenCalledWith(navOpts);
-    expect(routeSpec.foo["?"]).toHaveBeenCalledWith(navOpts);
-    expect(routeSpec.foo.bar).toHaveBeenCalledWith(navOpts);
-  });
-
-  it("should guard index routes", async () => {
-    const navOpts = new NavOpts("/foo");
-    const routeSpec = {
-      foo: {
-        "/": jest.fn(),
-        "?": jest.fn(),
-      },
-      "?": jest.fn(),
-    };
-
-    await resolver(routeSpec, navOpts, mockNotFound);
-
-    expect(routeSpec["?"]).toHaveBeenCalledWith(navOpts);
-    expect(routeSpec.foo["?"]).toHaveBeenCalledWith(navOpts);
-    expect(routeSpec.foo["/"]).toHaveBeenCalledWith(navOpts);
   });
 });
