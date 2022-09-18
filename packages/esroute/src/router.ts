@@ -95,7 +95,7 @@ export const createRouter = <T = any>(
       resolve(routes, initialOpts, notFound)
     );
 
-    if (!opts.eq(initialOpts)) {
+    if (opts !== initialOpts) {
       updateState(
         new NavOpts(opts.path, {
           replace: true,

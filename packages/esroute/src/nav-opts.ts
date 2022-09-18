@@ -50,13 +50,4 @@ export class NavOpts {
         replace: opts.replace ?? this.replace,
       });
   }
-
-  eq(o: NavOpts) {
-    return (
-      this.href === o.href &&
-      this.replace === o.replace &&
-      this.state === o.state &&
-      this.params.every((p, idx) => p === o.params[idx])
-    );
-  }
 }
