@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
-import { Router } from "./router";
+import { createRouter, Router } from "./router";
 
 vi.spyOn(history, "replaceState");
 vi.spyOn(history, "pushState");
@@ -11,7 +11,7 @@ describe("Router", () => {
   const onResolve = vi.fn();
   let router: Router<any>;
   beforeEach(() => {
-    router = new Router(
+    router = createRouter(
       { "": ({}, next) => next ?? "index", foo: () => "foo" },
       { defer: true }
     );

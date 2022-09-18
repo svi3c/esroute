@@ -1,9 +1,9 @@
-import { Router } from "esroute";
+import { createRouter } from "esroute";
 import { html, render } from "lit";
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderRoutes } from "./render-routes-directive";
 
-const router = new Router<any>({
+const router = createRouter<any>({
   "": async ({}, next) => next ?? html`test`,
   foo: async () => html`foo`,
   bar: {

@@ -3,6 +3,14 @@ import { resolve, Resolved } from "./route-resolver";
 import { Resolve, Routes } from "./routes";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
+export interface Router<T = any> {
+  go(opts: NavOpts): Promise<void>;
+  go(pathOrHref: PathOrHref, opts?: NavMeta): Promise<void>;
+  onResolve(listener: OnResolveListener<T>): () => void;
+  init(): void;
+  dispose(): void;
+  resolution?: Promise<Resolved<T>>;
+}
 
 export interface RouterConf<T = any> {
   /**
@@ -27,75 +35,68 @@ export interface RouterConf<T = any> {
   onResolve?: OnResolveListener<T>;
 }
 
-export class Router<T = any> {
-  resolution!: Promise<Resolved<T>>;
-  private _resolved?: Resolved<T>;
-  private _notFound: Resolve<T>;
-  private _noClick: boolean;
-  private _listeners = new Set<OnResolveListener<T>>();
+export const createRouter = <T = any>(
+  routes: Routes<T> = {},
+  {
+    notFound = ({ go }) => go([]),
+    noClick = false,
+    defer = false,
+    onResolve,
+  }: RouterConf<T> = {}
+): Router<T> => {
+  let _resolved: Resolved<T>;
+  const _listeners = new Set<OnResolveListener<T>>(
+    onResolve ? [onResolve] : []
+  );
+  let resolution: Promise<Resolved<T>>;
+  const router: Router<T> = {
+    get resolution() {
+      return resolution;
+    },
+    init() {
+      window.addEventListener("popstate", popStateListener);
+      if (!noClick) document.addEventListener("click", linkClickListener);
+      popStateListener({ state: history.state });
+    },
+    dispose() {
+      window.removeEventListener("popstate", popStateListener);
+      document.removeEventListener("click", linkClickListener);
+    },
+    async go(target: PathOrHref | NavOpts, opts?: NavMeta): Promise<void> {
+      // Serialize all navigaton requests
+      await this.resolution;
+      const navOpts =
+        target instanceof NavOpts ? target : new NavOpts(target, opts);
+      const res = await applyResolution(resolve(routes, navOpts, notFound));
+      updateState(res.opts);
+    },
+    onResolve(listener: OnResolveListener<T>) {
+      _listeners.add(listener);
+      if (_resolved) listener(_resolved);
+      return () => _listeners.delete(listener);
+    },
+  };
 
-  constructor(
-    public routes: Routes<T> = {},
-    {
-      notFound = ({ go }) => go([]),
-      noClick = false,
-      defer = false,
-      onResolve,
-    }: RouterConf<T> = {}
-  ) {
-    this._notFound = notFound;
-    this._noClick = noClick;
-    if (onResolve) this.onResolve(onResolve);
-    if (!defer) this.init();
-  }
-
-  go(opts: NavOpts): Promise<void>;
-  go(pathOrHref: PathOrHref, opts?: NavMeta): Promise<void>;
-  async go(target: PathOrHref | NavOpts, opts?: NavMeta): Promise<void> {
-    // Serialize all navigaton requests
-    await this.resolution;
-    const navigateOpts =
-      target instanceof NavOpts ? target : new NavOpts(target, opts);
-    const res = await this._applyResolution(this._resolve(navigateOpts));
-    this._updateState(res.opts);
-  }
-
-  onResolve(listener: OnResolveListener<T>) {
-    this._listeners.add(listener);
-    if (this._resolved) listener(this._resolved);
-    return () => this._listeners.delete(listener);
-  }
-
-  init() {
-    window.addEventListener("popstate", this._popStateListener);
-    if (!this._noClick)
-      document.addEventListener("click", this._linkClickListener);
-    this._popStateListener({ state: history.state });
-  }
-
-  dispose() {
-    window.removeEventListener("popstate", this._popStateListener);
-    document.removeEventListener("click", this._linkClickListener);
-  }
-
-  private _linkClickListener = (e: MouseEvent) => {
+  const linkClickListener = (e: MouseEvent) => {
     const target = isAnchorElement(e.target)
       ? e.target
       : e.composedPath?.().find(isAnchorElement);
     if (target && target.origin === location.origin) {
-      this.go(target.pathname, { replace: "replace" in target.dataset });
+      router.go(target.pathname, { replace: "replace" in target.dataset });
       e.preventDefault();
     }
   };
 
-  private _popStateListener = async ({ state }: { state: any }) => {
+  const popStateListener = async ({ state }: { state: any }) => {
     const { pathname, search } = window.location;
 
     const initialOpts = new NavOpts(`${pathname}${search}`, { state: state });
-    const { opts } = await this._applyResolution(this._resolve(initialOpts));
+    const { opts } = await applyResolution(
+      resolve(routes, initialOpts, notFound)
+    );
 
     if (!opts.eq(initialOpts)) {
-      this._updateState(
+      updateState(
         new NavOpts(opts.path, {
           replace: true,
           search: opts.search,
@@ -105,23 +106,23 @@ export class Router<T = any> {
     }
   };
 
-  private async _applyResolution(resolution: Promise<Resolved<T>>) {
-    this.resolution = resolution;
-    this._resolved = await resolution;
-    this._listeners.forEach((l) => l(this._resolved!));
-    return resolution;
-  }
+  const applyResolution = async (res: Promise<Resolved<T>>) => {
+    resolution = res;
+    _resolved = await res;
+    _listeners.forEach((l) => l(_resolved!));
+    return res;
+  };
 
-  private _updateState({ state, replace, href }: NavOpts) {
+  const updateState = ({ state, replace, href }: NavOpts) => {
     const history = window.history;
     if (replace) history.replaceState(state, "", href);
     else history.pushState(state, "", href);
-  }
+  };
 
-  private async _resolve(opts: NavOpts) {
-    return resolve(this.routes, opts, this._notFound);
-  }
-}
+  if (!defer) router.init();
+
+  return router;
+};
 
 const isAnchorElement = (
   target: EventTarget | null

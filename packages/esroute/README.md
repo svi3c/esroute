@@ -12,7 +12,7 @@ Those features may be the ones you are looking for.
 - [🕹 Simple configuration](#-simple-configuration)
 - [✅ Typesafe value resolution](#-typesafe-value-resolution)
 - [🏎 Fast startup and runtime](#-fast-startup-and-runtime)
-- [🦄 Composable rendering](#-composable-rendering)
+- [🦄 Virtual routes](#-virtual-routes)
 
 ### 🌈 Framework agnostic
 
@@ -23,13 +23,13 @@ Esroute is written with no external dependencies, so it does not require you to 
 A configuration can look as simple as this:
 
 ```ts
-import { Router } from "esroute";
+import { createRouter } from "esroute";
 
-const router = new Router({
+const router = createRouter({
   "": ({ go }, next) => next ?? go("/foo"),
   foo: () => load("routes/foo.html"),
-  nested: load("routes/nested/index.html"),
   nested: {
+    "": load("routes/nested/index.html"),
     "*": ({ params: [param] }) => load("routes/nested/dynamic.html", param),
   },
 });
@@ -40,10 +40,10 @@ router.onResolve(({ value }) => render(value));
 You can compose the configuration as you like, which allows you to easily modularize you route configuration:
 
 ```ts
-const router = new Router({
+const router = createRouter({
   "": ({ go }) => go("/mod1"),
   mod1: mod1Routes,
-  composed: {
+  merged: {
     ...mod2Routes,
     ...mod3Routes,
   },
@@ -55,7 +55,7 @@ const router = new Router({
 The router can be restricted to allow only certain resolution types.
 
 ```ts
-const router = new Router<string>({
+const router = createRouter<string>({
   "": () => "some nice value",
   async: loadString(),
   weird: () => 42, // TS Error
@@ -68,18 +68,16 @@ esroute comes with no dependencies and is quite small.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
 
-### 🦄 Composable rendering
+### 🦄 Virtual routes
 
-With esroute you can compose ancestor with predecessor render results throughout your routing tree.
-
-When route resolution is done, all empty (`""`) routes on the path to the leaf are collected and then rendered from leaf to root.
+When route resolution is done, all virtual routes (`""`) on the path to the leaf are collected and then rendered from leaf to root.
 
 This allows creating various szenarios. Here are some examples:
 
 #### Route guards
 
 ```ts
-const router = new Router({
+const router = createRouter({
   members: {
     "": ({ go }, next) => loggedIn ? next : go("/login")
     ...memberRoutes
@@ -92,7 +90,7 @@ In the example above, a logged in user will see the profile and a logged-out use
 #### Composed rendering
 
 ```ts
-const router = new Router({
+const router = createRouter({
   foo: {
     "": ({}, next) => (next ? `foo${next}` : "foo"),
     bar: () => `bar`,
@@ -102,12 +100,12 @@ const router = new Router({
 
 In this case the route `/foo` will resolve to `"foo"` and the route `/foo/bar` will resolve to `foobar`. With this pattern you can implement index routes and frames.
 
-#### Virtual routes
+#### Anonymous grouping of routes
 
-In some cases you might want to attach some common frame or a guard to a set of routes without placing them on a separate parent route. This is where virtual routes come into play:
+In some cases you might want to attach rendering af a common frame or a guard to a set of routes without placing them on a separate named parent route. This is where virtual routes come into play:
 
 ```ts
-const router = new Router({
+const router = createRouter({
   "": {
     "": ({ go }, value) => (loggedIn ? value ?? renderIndex() : go("/login")),
     ...memberRoutes,
@@ -128,8 +126,7 @@ Example:
 
 ```ts
 const routes: Routes = {
-  "": resolveIndex,
-  "?": ({ go }) => isLoggedIn || go(["login"]),
+  "": ({ go }, value) => (isLoggedIn || value) ?? go(["login"]),
   x: resolveX,
   nested: {
     "": resolveNestedIndex,
