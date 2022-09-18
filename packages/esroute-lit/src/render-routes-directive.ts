@@ -1,11 +1,19 @@
 import { Router } from "esroute";
 import { noChange } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
-import { DirectiveResult } from "lit/directive.js";
+import { DirectiveResult, PartInfo, PartType } from "lit/directive.js";
 
 class RenderRoutesDirective extends AsyncDirective {
   private _r?: Router;
   private _u?: () => void;
+
+  constructor(partInfo: PartInfo) {
+    super(partInfo);
+    if (partInfo.type !== PartType.CHILD)
+      throw new Error(
+        "The `renderRoutes` directive must be used as a child directive."
+      );
+  }
 
   override render(router: Router) {
     if (this._r === router) return noChange;

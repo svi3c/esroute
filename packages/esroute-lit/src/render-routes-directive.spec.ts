@@ -13,20 +13,30 @@ const router = new Router<any>({
 });
 
 describe("renderRoutes directive", () => {
-  beforeEach(() => {
-    render(html``, document.body);
-    render(html`${renderRoutes(router)}`, document.body);
+  it("should throw an error, if not used as a child directive", async () => {
+    expect(() =>
+      render(html`<div ${renderRoutes(router)}></div>`, document.body)
+    ).toThrow(
+      "The `renderRoutes` directive must be used as a child directive."
+    );
   });
 
-  it("should render a route", async () => {
-    await router.go("/foo");
+  describe("rendering routes", () => {
+    beforeEach(() => {
+      render(html``, document.body);
+      render(html`${renderRoutes(router)}`, document.body);
+    });
 
-    expect(document.body.innerHTML).toContain("foo");
-  });
+    it("should render a route", async () => {
+      await router.go("/foo");
 
-  it("should render nested routes", async () => {
-    await router.go("/bar/baz");
+      expect(document.body.innerHTML).toContain("foo");
+    });
 
-    expect(document.body.innerHTML).toContain("bar baz");
+    it("should render nested routes", async () => {
+      await router.go("/bar/baz");
+
+      expect(document.body.innerHTML).toContain("bar baz");
+    });
   });
 });
