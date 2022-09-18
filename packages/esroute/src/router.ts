@@ -4,6 +4,7 @@ import { Resolve, Routes } from "./routes";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 export interface Router<T = any> {
+  routes: Routes<T>;
   go(opts: NavOpts): Promise<void>;
   go(pathOrHref: PathOrHref, opts?: NavMeta): Promise<void>;
   onResolve(listener: OnResolveListener<T>): () => void;
@@ -49,7 +50,8 @@ export const createRouter = <T = any>(
     onResolve ? [onResolve] : []
   );
   let resolution: Promise<Resolved<T>>;
-  const router: Router<T> = {
+  const r: Router<T> = {
+    routes,
     get resolution() {
       return resolution;
     },
@@ -67,7 +69,7 @@ export const createRouter = <T = any>(
       await this.resolution;
       const navOpts =
         target instanceof NavOpts ? target : new NavOpts(target, opts);
-      const res = await applyResolution(resolve(routes, navOpts, notFound));
+      const res = await applyResolution(resolve(r.routes, navOpts, notFound));
       updateState(res.opts);
     },
     onResolve(listener: OnResolveListener<T>) {
@@ -82,7 +84,7 @@ export const createRouter = <T = any>(
       ? e.target
       : e.composedPath?.().find(isAnchorElement);
     if (target && target.origin === location.origin) {
-      router.go(target.pathname, { replace: "replace" in target.dataset });
+      r.go(target.pathname, { replace: "replace" in target.dataset });
       e.preventDefault();
     }
   };
@@ -90,9 +92,9 @@ export const createRouter = <T = any>(
   const popStateListener = async ({ state }: { state: any }) => {
     const { pathname, search } = window.location;
 
-    const initialOpts = new NavOpts(`${pathname}${search}`, { state: state });
+    const initialOpts = new NavOpts(`${pathname}${search}`, { state });
     const { opts } = await applyResolution(
-      resolve(routes, initialOpts, notFound)
+      resolve(r.routes, initialOpts, notFound)
     );
 
     if (opts !== initialOpts) {
@@ -119,9 +121,9 @@ export const createRouter = <T = any>(
     else history.pushState(state, "", href);
   };
 
-  if (!defer) router.init();
+  if (!defer) r.init();
 
-  return router;
+  return r;
 };
 
 const isAnchorElement = (
