@@ -4,12 +4,38 @@ import { Resolve, Routes } from "./routes";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
 export interface Router<T = any> {
+  /**
+   * The routes configuration.
+   * You may modify this object to change the routes.
+   * Be sure to call `router.init()` after the current route is configured.
+   */
   routes: Routes<T>;
-  go(opts: NavOpts): Promise<void>;
+  /**
+   * Navigates to the given path or href.
+   * You can modify the navigation options by passing a second argument.
+   * Returns a promise that resolves when the navigation is complete.
+   * @param pathOrHref Can be either an array of path parts or a relative url.
+   * @param opts The navigation metadata.
+   */
   go(pathOrHref: PathOrHref, opts?: NavMeta): Promise<void>;
+  /**
+   * Use this to listen for route changes.
+   * Returns an unsubscribe function.
+   * @param listener The listener that receives a Resolved object.
+   */
   onResolve(listener: OnResolveListener<T>): () => void;
+  /**
+   * Initializes the router: Starts listening for events, resolves the current
+   * route and calls the `onResolve` listeners.
+   */
   init(): void;
+  /**
+   * Stops listening for events.
+   */
   dispose(): void;
+  /**
+   * Use this to wait for the current navigation to complete.
+   */
   resolution?: Promise<Resolved<T>>;
 }
 

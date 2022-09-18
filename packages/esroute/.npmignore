@@ -4,3 +4,4 @@ demo
 jest.config.js
 src
 tsconfig.json
+tsconfig-check.json
