@@ -1,11 +1,11 @@
+import { Router } from "esroute";
 import { noChange } from "lit";
 import { AsyncDirective, directive } from "lit/async-directive.js";
 import { DirectiveResult, PartInfo, PartType } from "lit/directive.js";
-import { Router } from "./adapters";
 
 class RenderRoutesDirective extends AsyncDirective {
-  private _router?: Router;
-  private _unsubscribe?: () => void;
+  private _r?: Router;
+  private _u?: () => void;
 
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -16,14 +16,14 @@ class RenderRoutesDirective extends AsyncDirective {
   }
 
   override render(router: Router) {
-    if (this._router === router) return noChange;
-    this._unsubscribe?.();
-    this._router = router;
+    if (this._r === router) return noChange;
+    this._u?.();
+    this._r = router;
     if (this.isConnected) this._subscribe();
   }
 
   override disconnected() {
-    this._unsubscribe!();
+    this._u!();
   }
 
   override reconnected() {
@@ -31,9 +31,7 @@ class RenderRoutesDirective extends AsyncDirective {
   }
 
   private _subscribe() {
-    this._unsubscribe = this._router!.onResolve(({ value }) =>
-      this.setValue(value)
-    );
+    this._u = this._r!.onResolve(({ value }) => this.setValue(value));
   }
 }
 

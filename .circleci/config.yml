@@ -34,7 +34,7 @@ jobs:
           command: yarn typecheck
       - run:
           name: Run tests
-          command: yarn test --runInBand
+          command: yarn test
 
 workflows:
   # Below is the definition of your workflow.
