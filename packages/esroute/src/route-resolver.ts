@@ -41,41 +41,31 @@ export const resolve = async <T>(
   return { value: value as T, opts };
 };
 
-const getResolves = (root: Routes, opts: NavOpts): Resolve[] | null => {
+const getResolves = (
+  root: Routes,
+  { path, params }: NavOpts
+): Resolve[] | null => {
   const resolves: Resolve[] = [];
   let routes: Routes | Resolve | null = root;
-  for (const part of opts.path) {
-    if (!routes) return null;
-    if (typeof routes === "function") return null;
-    routes = getChildren(routes, opts, part, resolves);
+  for (let i = 0; i < path.length; i++) {
+    const part = path[i];
+    if (!routes || typeof routes === "function") return null;
+    const virtual: Routes | Resolve | void = routes[""];
+    if (typeof virtual === "function") resolves.unshift(virtual);
+    if (part in routes) routes = routes[part];
+    else if ("*" in routes) {
+      params.push(part);
+      routes = routes["*"];
+    } else if (typeof virtual === "object") {
+      routes = virtual;
+      i--;
+    }
   }
-  if (typeof routes === "function") {
-    resolves.unshift(routes);
-    return resolves;
-  }
-  if (routes && typeof routes[""] === "function") {
-    resolves.unshift(routes[""]);
-    return resolves;
-  }
+  do
+    if (typeof routes === "function") {
+      resolves.unshift(routes);
+      return resolves;
+    }
+  while ((routes = routes[""]));
   return null;
-};
-
-const getChildren = (
-  routes: Routes,
-  opts: NavOpts,
-  part: string,
-  resolves: Resolve[]
-): Routes | Resolve | null => {
-  if (part in routes) {
-    if (typeof routes[""] === "function")
-      resolves.unshift(routes[""] as Resolve);
-    return routes[part];
-  }
-  if ("*" in routes) {
-    opts.params.push(part);
-    return routes["*"];
-  }
-  const virtual = routes[""];
-  if (!virtual || typeof virtual === "function") return null;
-  return getChildren(virtual, opts, part, resolves);
 };

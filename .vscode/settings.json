@@ -4,6 +4,5 @@
     "**/.pnp.*": true
   },
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "testing.automaticallyOpenPeekView": "never"
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

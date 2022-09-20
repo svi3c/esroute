@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
 import { resolve } from "./route-resolver";
+import { Routes } from "./routes";
 
 describe("Resolver", () => {
-  const mockNotFound = vi.fn();
+  const notFound = vi.fn();
 
   describe("resolution", () => {
     it("should resolve a route with resolve fn", async () => {
@@ -12,7 +13,7 @@ describe("Resolver", () => {
       const { value, opts } = await resolve(
         { foo: { bar: () => "foobar" } },
         navOpts,
-        mockNotFound
+        notFound
       );
 
       expect(value).toEqual("foobar");
@@ -25,7 +26,7 @@ describe("Resolver", () => {
       const { value, opts } = await resolve(
         { foo: { bar: { "": () => "bar" } } },
         navOpts,
-        mockNotFound
+        notFound
       );
 
       expect(value).toEqual("bar");
@@ -34,36 +35,74 @@ describe("Resolver", () => {
   });
 
   describe("virtual routes", () => {
-    it("should enable composite rendering", async () => {
-      const navOpts = new NavOpts("/foo");
+    const index = vi.fn();
 
-      const { value, opts } = await resolve(
-        {
-          "": ({}, next) => (next ? `${next}baz` : "index"),
-          foo: () => "bar",
-        },
-        navOpts,
-        mockNotFound
-      );
+    it("should resolve index routes", async () => {
+      const routes: Routes = { "": index };
 
-      expect(value).toEqual("barbaz");
+      await resolve(routes, new NavOpts("/"), notFound);
+
+      expect(index).toHaveBeenCalled();
     });
 
-    it("should be nestable", async () => {
-      const navOpts = new NavOpts("/foo");
+    it("should resolve index route nested in virtual routes", async () => {
+      const routes: Routes = { foo: { "": { "": index } } };
 
-      const { value, opts } = await resolve(
-        {
-          "": {
-            "": ({}, next) => (next ? `${next}baz` : "index"),
-            foo: () => "bar",
-          },
-        },
-        navOpts,
-        mockNotFound
-      );
+      await resolve(routes, new NavOpts("/foo"), notFound);
 
-      expect(value).toEqual("barbaz");
+      expect(index).toHaveBeenCalled();
+    });
+
+    it("should resolve index route nested in virtual routes at /", async () => {
+      const routes: Routes = { "": { "": index } };
+
+      await resolve(routes, new NavOpts("/"), notFound);
+
+      expect(index).toHaveBeenCalled();
+    });
+
+    it("should not resolve sibling virtual routes", async () => {
+      const foo = vi.fn();
+      const routes: Routes = { "": { "": index }, foo };
+
+      await resolve(routes, new NavOpts("/foo"), notFound);
+
+      expect(index).not.toHaveBeenCalled();
+      expect(foo).toHaveBeenCalled();
+    });
+
+    it("should pass on ancestors to index routes", async () => {
+      const routes: Routes = {
+        "": index,
+        foo: () => "foo",
+        bar: { baz: () => "bar/baz" },
+      };
+
+      await resolve(routes, new NavOpts("/foo"), notFound);
+      await resolve(routes, new NavOpts("/bar/baz"), notFound);
+
+      expect(index).toHaveBeenNthCalledWith(1, expect.anything(), "foo");
+      expect(index).toHaveBeenNthCalledWith(2, expect.anything(), "bar/baz");
+    });
+
+    it("should resolve named routes within virtual routes", async () => {
+      const foo = vi.fn();
+      const routes: Routes = { "": { "": { foo } } };
+
+      await resolve(routes, new NavOpts("/foo"), notFound);
+
+      expect(foo).toHaveBeenCalled();
+    });
+
+    it("should add params to NavOpts", async () => {
+      const baz = vi.fn();
+      const routes: Routes = { foo: { "*": { baz } } };
+      const opts = new NavOpts("/foo/bar/baz");
+
+      await resolve(routes, opts, notFound);
+
+      expect(baz).toHaveBeenCalled();
+      expect(opts.params).toEqual(["bar"]);
     });
   });
 
@@ -74,7 +113,7 @@ describe("Resolver", () => {
       const { value, opts } = await resolve(
         { foo: ({ go }) => go("/bar"), bar: () => "bar" },
         navOpts,
-        mockNotFound
+        notFound
       );
 
       expect(value).toEqual("bar");
@@ -88,7 +127,7 @@ describe("Resolver", () => {
         resolve(
           { foo: ({ go, state }) => go("/foo", { state: state + 1 }) },
           navOpts,
-          mockNotFound
+          notFound
         )
       ).rejects.toEqual(
         new Error(`More than 10 redirects: ${"/foo -> ".repeat(10)}/foo`)
