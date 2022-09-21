@@ -14,13 +14,15 @@ import { html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 
 const router = createRouter({
-  "": () =>
-    import("./routes/root").then(() => html`<esroute-root></esroute-root>`),
-  foo: {
-    "*": ({ params: [name] }) =>
-      import("./routes/foo").then(
-        () => html`<my-greeter greeting=${name}></my-greeter>`
-      ),
+  routes: {
+    "": () =>
+      import("./routes/root").then(() => html`<esroute-root></esroute-root>`),
+    foo: {
+      "*": ({ params: [name] }) =>
+        import("./routes/foo").then(
+          () => html`<my-greeter greeting=${name}></my-greeter>`
+        ),
+    },
   },
 });
 

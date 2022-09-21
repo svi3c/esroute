@@ -11,10 +11,9 @@ describe("Router", () => {
   const onResolve = vi.fn();
   let router: Router<any>;
   beforeEach(() => {
-    router = createRouter(
-      { "": ({}, next) => next ?? "index", foo: () => "foo" },
-      { defer: true }
-    );
+    router = createRouter({
+      routes: { "": ({}, next) => next ?? "index", foo: () => "foo" },
+    });
   });
 
   describe("init()", () => {

@@ -41,6 +41,11 @@ export interface Router<T = any> {
 
 export interface RouterConf<T = any> {
   /**
+   * The routes configuration. You can modify this object later.
+   * Make sure, the current route is in place before you call `router.init()`.
+   */
+  routes?: Routes<T>;
+  /**
    * A fallback resolve funuction to use, if a route could not be found.
    * By default it redirects to the root path '/'.
    */
@@ -52,25 +57,17 @@ export interface RouterConf<T = any> {
    */
   noClick?: boolean;
   /**
-   * Whether the router should delay initialization until `start()` is
-   * called on the `Router` instance.
-   */
-  defer?: boolean;
-  /**
    * A callback that is invoked whenever a route is resolved.
    */
   onResolve?: OnResolveListener<T>;
 }
 
-export const createRouter = <T = any>(
-  routes: Routes<T> = {},
-  {
-    notFound = ({ go }) => go([]),
-    noClick = false,
-    defer = false,
-    onResolve,
-  }: RouterConf<T> = {}
-): Router<T> => {
+export const createRouter = <T = any>({
+  routes = {},
+  notFound = ({ go }) => go([]),
+  noClick = false,
+  onResolve,
+}: RouterConf<T> = {}): Router<T> => {
   let _resolved: Resolved<T>;
   const _listeners = new Set<OnResolveListener<T>>(
     onResolve ? [onResolve] : []
@@ -146,8 +143,6 @@ export const createRouter = <T = any>(
     if (replace) history.replaceState(state, "", href);
     else history.pushState(state, "", href);
   };
-
-  if (!defer) r.init();
 
   return r;
 };

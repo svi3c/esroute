@@ -26,26 +26,31 @@ A configuration can look as simple as this:
 import { createRouter } from "esroute";
 
 const router = createRouter({
-  "": ({ go }, next) => next ?? go("/foo"),
-  foo: () => load("routes/foo.html"),
-  nested: {
-    "": load("routes/nested/index.html"),
-    "*": ({ params: [param] }) => load("routes/nested/dynamic.html", param),
+  routes: {
+    "": ({ go }, next) => next ?? go("/foo"),
+    foo: () => load("routes/foo.html"),
+    nested: {
+      "": load("routes/nested/index.html"),
+      "*": ({ params: [param] }) => load("routes/nested/dynamic.html", param),
+    },
   },
 });
 
 router.onResolve(({ value }) => render(value));
+router.init();
 ```
 
 You can compose the configuration as you like, which allows you to easily modularize you route configuration:
 
 ```ts
 const router = createRouter({
-  "": ({ go }) => go("/mod1"),
-  mod1: mod1Routes,
-  merged: {
-    ...mod2Routes,
-    ...mod3Routes,
+  routes: {
+    "": ({ go }) => go("/mod1"),
+    mod1: mod1Routes,
+    merged: {
+      ...mod2Routes,
+      ...mod3Routes,
+    },
   },
 });
 ```
@@ -56,9 +61,11 @@ The router can be restricted to allow only certain resolution types.
 
 ```ts
 const router = createRouter<string>({
-  "": () => "some nice value",
-  async: loadString(),
-  weird: () => 42, // TS Error
+  routes: {
+    "": () => "some nice value",
+    async: loadString(),
+    weird: () => 42, // TS Error
+  },
 });
 ```
 
@@ -77,12 +84,12 @@ This allows creating various szenarios. Here are some examples:
 #### Route guards
 
 ```ts
-const router = createRouter({
+const router = createRouter({routes:{
   members: {
     "": ({ go }, next) => loggedIn ? next : go("/login")
     ...memberRoutes
   }
-});
+}});
 ```
 
 In the example above, a logged in user will see the profile and a logged-out user will see the login page instead.
@@ -91,9 +98,11 @@ In the example above, a logged in user will see the profile and a logged-out use
 
 ```ts
 const router = createRouter({
-  foo: {
-    "": ({}, next) => (next ? `foo${next}` : "foo"),
-    bar: () => `bar`,
+  routes: {
+    foo: {
+      "": ({}, next) => (next ? `foo${next}` : "foo"),
+      bar: () => `bar`,
+    },
   },
 });
 ```
@@ -106,11 +115,13 @@ In some cases you might want to attach rendering af a common frame or a guard to
 
 ```ts
 const router = createRouter({
-  "": {
-    "": ({ go }, value) => (loggedIn ? value ?? renderIndex() : go("/login")),
-    ...memberRoutes,
+  routes: {
+    "": {
+      "": ({ go }, value) => (loggedIn ? value ?? renderIndex() : go("/login")),
+      ...memberRoutes,
+    },
+    login: () => renderLogin(),
   },
-  login: () => renderLogin(),
 });
 ```
 
@@ -118,7 +129,7 @@ In this sczenario we have the `memberRoutes` next to the `/login` route.
 
 ## Router configuration
 
-The `Router` constructor takes two arguments: A `Routes` and a `RouterConf` object.
+The `createRouter` factory takes a `RouterConf` object as parameter.
 
 ### The `Routes`
 
@@ -147,12 +158,17 @@ const routes: Routes = {
 
 ```ts
 interface RouterConf<T> {
+  routes?: Routes<T>;
   notFound?: Resolve<T>;
   noClick?: boolean;
-  defer?: boolean;
   onResolve?: (resolved: Resolved<T>) => void;
 }
 ```
+
+`RouterConf.routes`
+The routes configuration.
+You may modify this object to change the routes.
+Be sure to call `router.init()` after the current route is configured.
 
 `RouterConf.notFound`
 A fallback resolve funuction to use, if a route could not be found.
@@ -160,11 +176,6 @@ By default it redirects to the root path '/'.
 
 `RouterConf.noClick`
 Whether the click handler for anchor elements shall not be installed. This might make sense, if you want to take more control over how anchor clicks are handled.
-
-`RouterConf.defer`
-Whether the router should delay initialization until `start()` is called on the `Router` instance.
-
-This can be used to prevent circular dependencies in your application. You can modify the `routes` property on the router instance before calling `start()`.
 
 `RouterConf.onResolve`
 A callback that is invoked whenever a route is resolved.
