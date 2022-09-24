@@ -4,11 +4,13 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { renderRoutes } from "./render-routes-directive";
 
 const router = createRouter<any>({
-  "": async ({}, next) => next ?? html`test`,
-  foo: async () => html`foo`,
-  bar: {
-    "": async ({}, next) => `bar ${next}`,
-    baz: async () => `baz`,
+  routes: {
+    "": async ({}, next) => next ?? html`test`,
+    foo: async () => html`foo`,
+    bar: {
+      "": async ({}, next) => `bar ${next}`,
+      baz: async () => `baz`,
+    },
   },
 });
 
