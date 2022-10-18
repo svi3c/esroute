@@ -7,7 +7,6 @@
   "scripts": {
     "build": "rm -rf dist && tsc & yarn esbuild",
     "esbuild": "esbuild src/index.ts --bundle --sourcemap --format=esm --minify --outfile=dist/index.js",
-    "start": "yarn esbuild --watch & yarn typecheck --watch",
     "typecheck": "tsc -p tsconfig-check.json",
     "prepublish": "yarn build & yarn typecheck"
   },

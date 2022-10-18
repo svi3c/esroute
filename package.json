@@ -3,7 +3,6 @@
   "scripts": {
     "build": "yarn workspaces foreach -vtp run build",
     "test": "vitest",
-    "start": "yarn workspaces foreach -vpi run start",
     "typecheck": "yarn workspaces foreach -vp run typecheck"
   },
   "devDependencies": {
