@@ -34,6 +34,35 @@ describe("Resolver", () => {
     });
   });
 
+  describe("guards", () => {
+    const guard = vi.fn();
+    const index = vi.fn();
+
+    it("should resolve routes with guard returning anything but NavOpts", async () => {
+      const routes: Routes = { "?": guard, "": index };
+      guard.mockResolvedValue(true);
+
+      await resolve(routes, new NavOpts("/"), notFound);
+
+      expect(guard).toHaveBeenCalled();
+      expect(index).toHaveBeenCalled();
+    });
+
+    it("should redirect, if a guard returns NavOpts", async () => {
+      const routes: Routes = {
+        foo: { "?": guard, "": index },
+        bar: () => "foo",
+      };
+      guard.mockImplementation(({ go }) => go("/bar"));
+
+      const resolved = await resolve(routes, new NavOpts("/foo"), notFound);
+
+      expect(guard).toHaveBeenCalled();
+      expect(index).not.toHaveBeenCalled();
+      expect(resolved.value).toEqual("foo");
+    });
+  });
+
   describe("virtual routes", () => {
     const index = vi.fn();
 

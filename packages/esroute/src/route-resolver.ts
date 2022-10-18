@@ -24,7 +24,7 @@ export const resolve = async <T>(
   while (value instanceof NavOpts && navPath.length <= MAX_REDIRECTS) {
     opts = value;
     navPath.push(opts);
-    const resolves = getResolves(routes, opts) ?? [notFound];
+    const resolves = (await getResolves(routes, opts)) ?? [notFound];
     for (const resolve of resolves) {
       value = await resolve(opts, value instanceof NavOpts ? undefined : value);
       if (value instanceof NavOpts) break;
@@ -41,15 +41,22 @@ export const resolve = async <T>(
   return { value: value as T, opts };
 };
 
-const getResolves = (
+const getResolves = async (
   root: Routes,
-  { path, params }: NavOpts
-): Resolve[] | null => {
+  opts: NavOpts
+): Promise<Resolve[] | null> => {
+  const { path, params } = opts;
   const resolves: Resolve[] = [];
   let routes: Routes | Resolve | null = root;
   for (let i = 0; i < path.length; i++) {
     const part = path[i];
     if (!routes || typeof routes === "function") return null;
+    const redirect = await checkGuard(routes, opts);
+    if (redirect) return [() => redirect];
+    if (typeof routes["?"] === "function") {
+      const guardResult = await routes["?"](opts);
+      if (guardResult instanceof NavOpts) return [() => guardResult];
+    }
     const virtual: Routes | Resolve | void = routes[""];
     if (typeof virtual === "function") resolves.unshift(virtual);
     if (part in routes) routes = routes[part];
@@ -61,11 +68,20 @@ const getResolves = (
       i--;
     }
   }
-  do
+  do {
     if (typeof routes === "function") {
       resolves.unshift(routes);
       return resolves;
     }
-  while ((routes = routes[""]));
+    const redirect = await checkGuard(routes, opts);
+    if (redirect) return [() => redirect];
+  } while ((routes = routes[""]));
   return null;
+};
+
+const checkGuard = async (routes: Routes, opts: NavOpts) => {
+  if (typeof routes["?"] === "function") {
+    const guardResult = await routes["?"](opts);
+    if (guardResult instanceof NavOpts) return guardResult;
+  }
 };
