@@ -12,6 +12,7 @@ Those features may be the ones you are looking for.
 - [🕹 Simple configuration](#-simple-configuration)
 - [✅ Typesafe value resolution](#-typesafe-value-resolution)
 - [🏎 Fast startup and runtime](#-fast-startup-and-runtime)
+- [🛡 Route guards](#-route-guards)
 - [🦄 Virtual routes](#-virtual-routes)
 
 ### 🌈 Framework agnostic
@@ -75,24 +76,42 @@ esroute comes with no dependencies and is quite small.
 
 The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
 
+#### 🛡 Route guards
+
+You can prevent resolving routes by redirecting to another route within a guard:
+
+```ts
+const router = createRouter({
+  routes: {
+    members: {
+      "?": async ({ go }) => (await isLoggedIn()) || go("/login"),
+      ...memberRoutes,
+    },
+  },
+});
+```
+
+In the example above, a logged in user will see the profile and a logged-out user will see the login page instead.
+
+Another example:
+
+```ts
+const router = createRouter({
+  routes: {
+    "*": {
+      "?": async ({ go, params: [id] }) =>
+        (await exists(id)) || go("/not-found"),
+      ...someRoutes,
+    },
+  },
+});
+```
+
 ### 🦄 Virtual routes
 
 When route resolution is done, all virtual routes (`""`) on the path to the leaf are collected and then rendered from leaf to root.
 
 This allows creating various szenarios. Here are some examples:
-
-#### Route guards
-
-```ts
-const router = createRouter({routes:{
-  members: {
-    "": ({ go }, next) => loggedIn ? next : go("/login")
-    ...memberRoutes
-  }
-}});
-```
-
-In the example above, a logged in user will see the profile and a logged-out user will see the login page instead.
 
 #### Composed rendering
 
