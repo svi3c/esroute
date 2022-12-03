@@ -1,8 +1,11 @@
 # esroute
 
-A small efficient framework-agnostic client-side routing library, written in TypeScript.
+A small efficient framework-agnostic client-side routing library, written in TypeScript.\
+[![](https://flat.badgen.net/bundlephobia/minzip/esroute)](https://bundlephobia.com/result?p=esroute)
 
 It is currently under development and API might slightly change.
+
+[Demo](https://stackblitz.com/edit/esroute)
 
 ## Features
 
@@ -74,7 +77,7 @@ const router = createRouter<string>({
 
 esroute comes with no dependencies and is quite small.
 
-The route resolution is done by traversing the route spec tree and this algorithm is based on simple string comparisons (no regex matching).
+The route resolution is done by traversing the route spec that is used to configure the app routes (no preprocessing required). The algorithm is based on simple string comparisons (no regex matching).
 
 #### 🛡 Route guards
 
