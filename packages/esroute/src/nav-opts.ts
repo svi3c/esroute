@@ -5,6 +5,8 @@ export interface NavMeta {
   search?: Record<string, string>;
   /** The state to push. */
   state?: any;
+  /** The location hash. */
+  hash?: string;
   /** Whethe the history state shall be replaced. */
   replace?: boolean;
   /** Whether the resolution was triggered by a popstate event. */
@@ -14,25 +16,31 @@ export interface NavMeta {
 export class NavOpts implements NavMeta {
   readonly state?: any;
   readonly params: string[] = [];
+  readonly hash?: string;
   readonly replace?: boolean;
   readonly path: string[];
-  readonly search?: Record<string, string>;
+  readonly search: Record<string, string>;
   readonly pop?: boolean;
   private _h?: string;
 
   constructor(
     pathOrHref: PathOrHref,
-    { pop, replace, search, state }: NavMeta = {}
+    { hash, pop, replace, search, state }: NavMeta = {}
   ) {
     if (typeof pathOrHref === "string") {
       if (!pathOrHref.startsWith("/")) pathOrHref = `/${pathOrHref}`;
       if (!search) this._h = pathOrHref;
-      const [pathString, searchString] = pathOrHref.split("?");
+      const [, pathString, , searchString, , hash] = pathOrHref.match(
+        /([^?#]+)(\?([^#]+))?(#(.+))?/
+      )!;
       this.path = pathString.split("/").filter(Boolean);
-      this.search ??= Object.fromEntries(
-        new URLSearchParams(searchString).entries()
-      );
+      if (searchString)
+        this.search = Object.fromEntries(
+          new URLSearchParams(searchString).entries()
+        );
+      if (hash) this.hash = hash;
     } else this.path = pathOrHref;
+    if (hash !== undefined) this.hash = hash;
     if (pop !== undefined) this.pop = pop;
     if (search !== undefined) this.search = search;
     if (state !== undefined) this.state = state;

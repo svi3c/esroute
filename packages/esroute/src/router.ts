@@ -113,9 +113,9 @@ export const createRouter = <T = any>({
   };
 
   const stateFromHref = async (e: { state: any } | PopStateEvent) => {
-    const { pathname, search } = window.location;
+    const { href, origin } = window.location;
 
-    const initialOpts = new NavOpts(`${pathname}${search}`, {
+    const initialOpts = new NavOpts(href.substring(origin.length), {
       state: e.state,
       ...(e instanceof PopStateEvent && { pop: true }),
     });
