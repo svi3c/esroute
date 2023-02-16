@@ -79,12 +79,12 @@ export const createRouter = <T = any>({
       return resolution;
     },
     init() {
-      window.addEventListener("popstate", popStateListener);
+      window.addEventListener("popstate", stateFromHref);
       if (!noClick) document.addEventListener("click", linkClickListener);
-      popStateListener({ state: history.state });
+      stateFromHref({ state: history.state });
     },
     dispose() {
-      window.removeEventListener("popstate", popStateListener);
+      window.removeEventListener("popstate", stateFromHref);
       document.removeEventListener("click", linkClickListener);
     },
     async go(target: PathOrHref | NavOpts, opts?: NavMeta): Promise<void> {
@@ -112,10 +112,13 @@ export const createRouter = <T = any>({
     }
   };
 
-  const popStateListener = async ({ state }: { state: any }) => {
-    const { pathname, search } = window.location;
+  const stateFromHref = async (e: { state: any } | PopStateEvent) => {
+    const { href, origin } = window.location;
 
-    const initialOpts = new NavOpts(`${pathname}${search}`, { state });
+    const initialOpts = new NavOpts(href.substring(origin.length), {
+      state: e.state,
+      ...(e instanceof PopStateEvent && { pop: true }),
+    });
     const { opts } = await applyResolution(
       resolve(r.routes, initialOpts, notFound)
     );
