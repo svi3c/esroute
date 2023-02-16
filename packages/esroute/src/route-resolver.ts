@@ -2,7 +2,9 @@ import { NavOpts } from "./nav-opts";
 import { Resolve, Routes } from "./routes";
 
 export interface Resolved<T> {
+  /** The resolved value of the route. */
   value: T;
+  /** The final navigation options after all redirecting. */
   opts: NavOpts;
 }
 
