@@ -20,9 +20,10 @@ describe("Router", () => {
     it("should subscribe to popstate and anchor click events", async () => {
       router.onResolve(onResolve);
       router.init();
-      location.href = "/foo";
+      location.href = "http://localhost/foo";
 
       window.dispatchEvent(new PopStateEvent("popstate"));
+      await new Promise(setImmediate);
       await router.resolution;
 
       expect(onResolve).toHaveBeenCalledWith({
@@ -36,14 +37,14 @@ describe("Router", () => {
       router.init();
       const anchor = document.createElement("a");
       document.body.appendChild(anchor);
-      // @ts-ignore
-      anchor.origin = "//";
-      anchor.pathname = "/foo";
+      anchor.href = "http://localhost/foo";
+      vi.spyOn(location, "origin", "get").mockReturnValue("http://localhost");
 
       anchor.click();
-      await router.resolution;
+      // await router.resolution;
+      await new Promise(setImmediate);
 
-      expect(onResolve).toHaveBeenCalledWith({
+      expect(onResolve).toHaveBeenLastCalledWith({
         value: "foo",
         opts: expect.any(NavOpts),
       });
