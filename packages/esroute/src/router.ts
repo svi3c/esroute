@@ -107,7 +107,9 @@ export const createRouter = <T = any>({
       ? e.target
       : e.composedPath?.().find(isAnchorElement);
     if (target && target.origin === location.origin) {
-      r.go(target.pathname, { replace: "replace" in target.dataset });
+      r.go(target.href.substring(location.origin.length), {
+        replace: "replace" in target.dataset,
+      });
       e.preventDefault();
     }
   };
