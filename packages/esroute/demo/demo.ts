@@ -1,4 +1,4 @@
-import { createRouter } from "../src/index";
+import { createRouter, restoreHandling } from "../src";
 
 const router = createRouter({
   routes: {
@@ -12,3 +12,5 @@ router.onResolve(({ value }) => {
 });
 
 router.init();
+
+router.onResolve(restoreHandling({ offset: 100 }));
