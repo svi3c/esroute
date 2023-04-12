@@ -63,6 +63,12 @@ describe("Router", () => {
 
       expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/foo");
     });
+
+    it("should replace the state, if replace flag is set with NavMeta", async () => {
+      await router.go({ path: ["foo"], replace: true });
+
+      expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/foo");
+    });
   });
 
   describe("onResolve()", () => {
