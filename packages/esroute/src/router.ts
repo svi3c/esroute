@@ -1,4 +1,4 @@
-import { NavMeta, NavOpts, PathOrHref } from "./nav-opts";
+import { NavMeta, NavOpts, PathOrHref, StrictNavMeta } from "./nav-opts";
 import { resolve, Resolved } from "./route-resolver";
 import { Resolve, Routes } from "./routes";
 
@@ -11,13 +11,15 @@ export interface Router<T = any> {
    */
   routes: Routes<T>;
   /**
-   * Navigates to the given path or href.
-   * You can modify the navigation options by passing a second argument.
+   * Triggers a navigation.
+   * You can modify the navigation options by passing in a second argument.
    * Returns a promise that resolves when the navigation is complete.
-   * @param pathOrHref Can be either an array of path parts or a relative url.
+   * @param target Can be one of array of path parts, a relative url, a NavOpts object or a
+   *   function that derives new NavOpts from the current NavOpts.
    * @param opts The navigation metadata.
    */
-  go(pathOrHref: PathOrHref, opts?: NavMeta): Promise<void>;
+  go(target: StrictNavMeta | ((prev: NavOpts) => StrictNavMeta)): Promise<void>;
+  go(target: PathOrHref, opts?: NavMeta): Promise<void>;
   /**
    * Use this to listen for route changes.
    * Returns an unsubscribe function.
@@ -87,11 +89,25 @@ export const createRouter = <T = any>({
       window.removeEventListener("popstate", stateFromHref);
       document.removeEventListener("click", linkClickListener);
     },
-    async go(target: PathOrHref | NavOpts, opts?: NavMeta): Promise<void> {
+    async go(
+      target: PathOrHref | StrictNavMeta | ((prev: NavOpts) => StrictNavMeta),
+      opts?: NavMeta
+    ): Promise<void> {
       // Serialize all navigaton requests
-      await this.resolution;
+      const prevRes = await this.resolution;
+      if (typeof target === "function") {
+        if (!prevRes)
+          throw new Error(
+            "Cannot call go() with a function before the first navigation has been started."
+          );
+        target = target(prevRes.opts);
+      }
       const navOpts =
-        target instanceof NavOpts ? target : new NavOpts(target, opts);
+        target instanceof NavOpts
+          ? target
+          : typeof target === "string" || Array.isArray(target)
+          ? new NavOpts(target, opts)
+          : new NavOpts(target);
       const res = await applyResolution(resolve(r.routes, navOpts, notFound));
       updateState(res.opts);
     },

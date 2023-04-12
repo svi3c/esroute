@@ -68,6 +68,33 @@ describe("NavOpts", () => {
       expect(opts.state).toEqual("abc");
       expect(opts.replace).toEqual(true);
     });
+
+    it("should take another NavOpts object as first parameter", () => {
+      const opts = new NavOpts(
+        new NavOpts("/foo/bar?a=b", { state: "abc", replace: true })
+      );
+
+      expect(opts.state).toEqual("abc");
+      expect(opts.replace).toEqual(true);
+      expect(opts.href).toEqual("/foo/bar?a=b");
+      expect(opts.search).toEqual({ a: "b" });
+      expect(opts.path).toEqual(["foo", "bar"]);
+    });
+
+    it("should take an object as first parameter that implements NavOpts", () => {
+      const opts = new NavOpts({
+        path: ["foo", "bar"],
+        state: "abc",
+        search: { a: "b" },
+        replace: true,
+      });
+
+      expect(opts.state).toEqual("abc");
+      expect(opts.replace).toEqual(true);
+      expect(opts.href).toEqual("/foo/bar?a=b");
+      expect(opts.search).toEqual({ a: "b" });
+      expect(opts.path).toEqual(["foo", "bar"]);
+    });
   });
 
   describe("go", () => {

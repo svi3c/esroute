@@ -11,7 +11,21 @@ export interface NavMeta {
   replace?: boolean;
   /** Whether the resolution was triggered by a popstate event. */
   pop?: boolean;
+  /** The path to resolve. */
+  path?: string[];
+  /** The href to resolve. Should be relative. */
+  href?: string;
 }
+
+export type StrictNavMeta = NavMeta &
+  (
+    | {
+        path: string[];
+      }
+    | {
+        href: string;
+      }
+  );
 
 export class NavOpts implements NavMeta {
   readonly state?: any;
@@ -23,14 +37,17 @@ export class NavOpts implements NavMeta {
   readonly pop?: boolean;
   private _h?: string;
 
-  constructor(
-    pathOrHref: PathOrHref,
-    { hash, pop, replace, search, state }: NavMeta = {}
-  ) {
-    if (typeof pathOrHref === "string") {
-      if (!pathOrHref.startsWith("/")) pathOrHref = `/${pathOrHref}`;
-      if (!search) this._h = pathOrHref;
-      const [, pathString, , searchString, , hash] = pathOrHref.match(
+  constructor(target: StrictNavMeta);
+  constructor(target: PathOrHref, opts?: NavMeta);
+  constructor(target: PathOrHref | StrictNavMeta, opts: NavMeta = {}) {
+    let { path, href, hash, pop, replace, search, state } =
+      typeof target === "string" || Array.isArray(target) ? opts : target;
+    if (path) this.path = path;
+    else if (href || typeof target === "string") {
+      href ??= target as string;
+      if (!href.startsWith("/")) href = `/${href}`;
+      if (!search) this._h = href;
+      const [, pathString, , searchString, , hash] = href.match(
         /([^?#]+)(\?([^#]+))?(#(.+))?/
       )!;
       this.path = pathString.split("/").filter(Boolean);
@@ -39,7 +56,7 @@ export class NavOpts implements NavMeta {
           new URLSearchParams(searchString).entries()
         );
       if (hash) this.hash = hash;
-    } else this.path = pathOrHref;
+    } else this.path = target as string[];
     if (hash !== undefined) this.hash = hash;
     if (pop !== undefined) this.pop = pop;
     if (search !== undefined) this.search = search;
