@@ -164,7 +164,7 @@ __metadata:
   resolution: "@esroute/lit@workspace:packages/esroute-lit"
   dependencies:
     esbuild: ^0.17.8
-    esroute: ^0.7.2
+    esroute: ^0.8.0
     lit: ^2.6.1
     typescript: ^4.9.5
   languageName: unknown
@@ -716,7 +716,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"esroute@^0.7.2, esroute@workspace:packages/esroute":
+"esroute@^0.8.0, esroute@workspace:packages/esroute":
   version: 0.0.0-use.local
   resolution: "esroute@workspace:packages/esroute"
   dependencies:
