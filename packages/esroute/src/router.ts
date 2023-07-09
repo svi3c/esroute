@@ -153,10 +153,17 @@ export const createRouter = <T = any>({
   };
 
   const applyResolution = async (res: Promise<Resolved<T>>) => {
+    const prevResolution = _resolved;
     resolution = res;
-    _resolved = await res;
-    _listeners.forEach((l) => l(_resolved!));
-    return res;
+    try {
+      _resolved = await res;
+      _listeners.forEach((l) => l(_resolved!));
+      return res;
+    } catch (e) {
+      _resolved = prevResolution;
+      resolution = Promise.resolve(prevResolution);
+      throw e;
+    }
   };
 
   const updateState = ({ state, replace, href }: NavOpts) => {

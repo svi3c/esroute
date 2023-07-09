@@ -2,17 +2,18 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NavOpts } from "./nav-opts";
 import { createRouter, Router } from "./router";
 
-vi.spyOn(history, "replaceState");
-vi.spyOn(history, "pushState");
-
-Object.assign(global, { history, location, document, window });
-
 describe("Router", () => {
   const onResolve = vi.fn();
   let router: Router<any>;
   beforeEach(() => {
+    vi.spyOn(history, "replaceState");
+    vi.spyOn(history, "pushState");
     router = createRouter({
-      routes: { "": ({}, next) => next ?? "index", foo: () => "foo" },
+      routes: {
+        "": ({}, next) => next ?? "index",
+        foo: () => "foo",
+        fail: () => Promise.reject(),
+      },
     });
   });
 
@@ -68,6 +69,22 @@ describe("Router", () => {
       await router.go({ path: ["foo"], replace: true });
 
       expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/foo");
+    });
+
+    it("should stay on the same route and not block further routing, if resolution fails", async () => {
+      await router.go({ path: ["foo"], replace: true });
+      try {
+        await router.go({ path: ["fail"], replace: true });
+      } catch {}
+      await router.go({ path: [""], replace: true });
+
+      expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/foo");
+      expect(history.replaceState).not.toHaveBeenCalledWith(
+        undefined,
+        "",
+        "/fail"
+      );
+      expect(history.replaceState).toHaveBeenCalledWith(undefined, "", "/");
     });
   });
 
