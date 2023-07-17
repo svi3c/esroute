@@ -1,6 +1,6 @@
 {
   "name": "esroute",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A small efficient framework-agnostic client-side routing library, written in TypeScript.",
   "types": "dist/index.d.ts",
   "main": "dist/index.js",
@@ -20,8 +20,8 @@
   "author": "Sven Rogge <sreglitzki@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.17.8",
-    "typescript": "^4.9.5",
-    "vite": "^4.1.2"
+    "esbuild": "^0.18.13",
+    "typescript": "^5.1.6",
+    "vite": "^4.4.4"
   }
 }
