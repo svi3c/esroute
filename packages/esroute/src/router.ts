@@ -21,6 +21,8 @@ export interface Router<T = any> {
    * Returns a promise that resolves when the navigation is complete.
    * @param target Can be one of array of path parts, a relative url, a NavOpts object or a
    *   function that derives new NavOpts from the current NavOpts.
+   *   Use function to patch state, it uses replaceState() and keeps path, search and state
+   *   by default.
    * @param opts The navigation metadata.
    */
   go(target: StrictNavMeta | ((prev: NavOpts) => StrictNavMeta)): Promise<void>;
@@ -98,7 +100,7 @@ export const createRouter = <T = any>({
       document.removeEventListener("click", linkClickListener);
     },
     async go(
-      target: PathOrHref | StrictNavMeta | ((prev: NavOpts) => StrictNavMeta),
+      target: PathOrHref | StrictNavMeta | ((prev: NavOpts) => NavMeta),
       opts?: NavMeta
     ): Promise<void> {
       // Serialize all navigaton requests
@@ -108,7 +110,13 @@ export const createRouter = <T = any>({
           throw new Error(
             "Cannot call go() with a function before the first navigation has been started."
           );
-        target = target(prevRes.opts);
+        target = {
+          path: prevRes.opts.path,
+          search: prevRes.opts.search,
+          state: prevRes.opts.state,
+          replace: true,
+          ...target(prevRes.opts),
+        };
       }
       const navOpts =
         target instanceof NavOpts

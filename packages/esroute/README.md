@@ -12,6 +12,7 @@ It is currently under development and API might slightly change.
 Those features may be the ones you are looking for.
 
 - [🌈 Framework agnostic](#-framework-agnostic)
+- [🧭 Concise navigation API](#-concise-navigation-api)
 - [🕹 Simple configuration](#-simple-configuration)
 - [✅ Typesafe value resolution](#-typesafe-value-resolution)
 - [🏎 Fast startup and runtime](#-fast-startup-and-runtime)
@@ -21,6 +22,21 @@ Those features may be the ones you are looking for.
 ### 🌈 Framework agnostic
 
 Esroute is written with no external dependencies, so it does not require you to use a library.
+
+### 🧭 Concise navigation API
+
+Navigation with esroute is straight-forward.
+There is a `go()` method on the router instance.
+Examples:
+
+```ts
+// Navigate to some page
+router.go("/some/path", { search: { foo: "bar" }, state: 42 });
+// Update search params, keeping previous path and state. Will use history.replaceState() by default.
+router.go((prev) => ({
+  search: { foo: "baz" },
+}));
+```
 
 ### 🕹 Simple configuration
 
