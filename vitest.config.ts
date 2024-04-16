@@ -5,5 +5,6 @@ export default defineConfig({
     include: ["packages/**/src/**/*.spec.ts"],
     restoreMocks: true,
     environment: "happy-dom",
+    pool: "forks",
   },
 });
