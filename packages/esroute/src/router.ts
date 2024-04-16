@@ -25,7 +25,7 @@ export interface Router<T = any> {
    *   by default.
    * @param opts The navigation metadata.
    */
-  go(target: StrictNavMeta | ((prev: NavOpts) => StrictNavMeta)): Promise<void>;
+  go(target: StrictNavMeta | ((prev: NavOpts) => NavMeta)): Promise<void>;
   go(target: PathOrHref, opts?: NavMeta): Promise<void>;
   /**
    * Use this to listen for route changes.
