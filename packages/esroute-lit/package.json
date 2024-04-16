@@ -19,8 +19,8 @@
   "author": "Sven Rogge <sreglitzki@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "esbuild": "^0.18.13",
-    "typescript": "^5.1.6"
+    "esbuild": "^0.20.2",
+    "typescript": "^5.4.5"
   },
   "dependencies": {
     "esroute": "^0.8.1",

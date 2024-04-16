@@ -7,10 +7,10 @@
   },
   "devDependencies": {
     "happy-dom": "^8.4.2",
-    "regenerator-runtime": "^0.13.11",
-    "typescript": "^5.1.6",
-    "vite": "^4.4.4",
-    "vitest": "^0.33.0"
+    "regenerator-runtime": "^0.14.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.9",
+    "vitest": "^1.5.0"
   },
   "workspaces": [
     "packages/*"
