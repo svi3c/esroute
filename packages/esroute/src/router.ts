@@ -1,5 +1,5 @@
 import { NavMeta, NavOpts, PathOrHref, StrictNavMeta } from "./nav-opts";
-import { resolve, Resolved } from "./route-resolver";
+import { Resolved, resolve } from "./route-resolver";
 import { Resolve, Routes } from "./routes";
 
 export type OnResolveListener<T> = (resolved: Resolved<T>) => void;
@@ -10,6 +10,11 @@ export interface Router<T = any> {
    * Be sure to call `router.init()` after the current route is configured.
    */
   routes: Routes<T>;
+  /**
+   * The current resolved route.
+   * It is updated after each route resolution.
+   */
+  readonly current: NavOpts;
   /**
    * Triggers a navigation.
    * You can modify the navigation options by passing in a second argument.
@@ -70,13 +75,16 @@ export const createRouter = <T = any>({
   noClick = false,
   onResolve,
 }: RouterConf<T> = {}): Router<T> => {
-  let _resolved: Resolved<T>;
+  let _current: Resolved<T>;
   const _listeners = new Set<OnResolveListener<T>>(
     onResolve ? [onResolve] : []
   );
   let resolution: Promise<Resolved<T>>;
   const r: Router<T> = {
     routes,
+    get current() {
+      return _current.opts;
+    },
     get resolution() {
       return resolution;
     },
@@ -113,7 +121,7 @@ export const createRouter = <T = any>({
     },
     onResolve(listener: OnResolveListener<T>) {
       _listeners.add(listener);
-      if (_resolved) listener(_resolved);
+      if (_current) listener(_current);
       return () => _listeners.delete(listener);
     },
   };
@@ -153,15 +161,13 @@ export const createRouter = <T = any>({
   };
 
   const applyResolution = async (res: Promise<Resolved<T>>) => {
-    const prevResolution = _resolved;
     resolution = res;
     try {
-      _resolved = await res;
-      _listeners.forEach((l) => l(_resolved!));
-      return res;
+      const resolved = await res;
+      _listeners.forEach((l) => l(resolved));
+      return (_current = resolved);
     } catch (e) {
-      _resolved = prevResolution;
-      resolution = Promise.resolve(prevResolution);
+      resolution = Promise.resolve(_current);
       throw e;
     }
   };
